@@ -17,7 +17,7 @@ image = { version = "0.24", default-features = false, features = ["png", "jpeg",
 reqwest = { version = "0.11.22", features = ["blocking", "json"] }
 walkdir = "2.5"
 url = "=2.4.1"
-idna = "=0.4.0"
+idna = "=1.0.0"
 indexmap = "=2.2.6"
 eframe = { version = "0.26", default-features = true, features = ["wgpu"] }
 rfd = "0.14"
