@@ -17,7 +17,10 @@ use reqwest::blocking::Client;
 use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
-#[command(name = "pico-cover", about = "Fetch and downscale NDS cover art to 8bpp BMP for Pico Launcher.")]
+#[command(
+    name = "pico-cover",
+    about = "Fetch and downscale NDS cover art to 8bpp BMP for Pico Launcher."
+)]
 struct Args {
     /// Root folder or drive containing NDS ROMs.
     #[arg(long, default_value = ".")]
@@ -99,12 +102,8 @@ fn run_gui() -> Result<()> {
         viewport,
         ..NativeOptions::default()
     };
-    eframe::run_native(
-        "PicoCover",
-        options,
-        Box::new(|_| Box::new(GuiApp::new())),
-    )
-    .map_err(|e| anyhow!(e.to_string()))
+    eframe::run_native("PicoCover", options, Box::new(|_| Box::new(GuiApp::new())))
+        .map_err(|e| anyhow!(e.to_string()))
 }
 
 fn load_icon() -> Option<egui::IconData> {
@@ -146,7 +145,10 @@ fn process_root(config: &Config, mut log: impl FnMut(String)) -> Result<ProcessS
     fs::create_dir_all(&output_dir).context("Creating output directory")?;
 
     let mut stats = ProcessStats::default();
-    for entry in WalkDir::new(&config.root).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&config.root)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if !entry.file_type().is_file() {
             continue;
         }
@@ -191,7 +193,11 @@ fn load_logo_image() -> Option<egui::ColorImage> {
 }
 
 fn matches_ignore_ascii_case(value: &str, needle: &str) -> bool {
-    value.len() == needle.len() && value.chars().zip(needle.chars()).all(|(a, b)| a.eq_ignore_ascii_case(&b))
+    value.len() == needle.len()
+        && value
+            .chars()
+            .zip(needle.chars())
+            .all(|(a, b)| a.eq_ignore_ascii_case(&b))
 }
 
 fn handle_file(path: &Path, output_dir: &Path, config: &Config, client: &Client) -> Result<bool> {
@@ -272,7 +278,8 @@ fn render_cover_bmp(image: DynamicImage) -> Result<Vec<u8>> {
     let source = image.to_rgba8();
     let resized = resize(&source, 106, 96, FilterType::Lanczos3);
 
-    let mut canvas: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(128, 96, Rgba([0, 0, 0, 255]));
+    let mut canvas: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::from_pixel(128, 96, Rgba([0, 0, 0, 255]));
     replace(&mut canvas, &resized, 0, 0);
 
     let rgba_data: Vec<u8> = canvas
@@ -339,7 +346,7 @@ fn write_paletted_bmp(width: u32, height: u32, palette: &[u8], indices: &[u8]) -
         let end = start + width_usize;
         data.extend_from_slice(&indices[start..end]);
         if row_padding > 0 {
-            data.extend(std::iter::repeat(0u8).take(row_padding));
+            data.extend(std::iter::repeat_n(0u8, row_padding));
         }
     }
 
@@ -356,7 +363,7 @@ struct DriveInfo {
 
 fn detect_drives() -> Vec<DriveInfo> {
     let mut drives = Vec::new();
-    
+
     #[cfg(windows)]
     {
         for letter in b'A'..=b'Z' {
@@ -373,7 +380,7 @@ fn detect_drives() -> Vec<DriveInfo> {
             }
         }
     }
-    
+
     #[cfg(not(windows))]
     {
         // macOS: /Volumes, Linux: /media, /mnt
@@ -395,7 +402,7 @@ fn detect_drives() -> Vec<DriveInfo> {
             }
         }
     }
-    
+
     drives
 }
 
@@ -411,7 +418,7 @@ struct GuiApp {
     logo_texture: Option<egui::TextureHandle>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct UiConfig {}
 
 enum GuiMessage {
@@ -423,7 +430,7 @@ impl GuiApp {
     fn new() -> Self {
         let drives = detect_drives();
         let selected_drive = drives.iter().position(|d| d.has_pico).unwrap_or(0);
-        
+
         Self {
             ui_config: UiConfig::default(),
             logs: Vec::new(),
@@ -441,9 +448,12 @@ impl GuiApp {
         if self.drives.is_empty() {
             return Err(anyhow!("No drives detected"));
         }
-        let drive_path = self.drives.get(self.selected_drive)
+        let drive_path = self
+            .drives
+            .get(self.selected_drive)
             .ok_or_else(|| anyhow!("Invalid drive selection"))?
-            .path.clone();
+            .path
+            .clone();
         let config = self.ui_config.to_config(&drive_path)?;
         let (tx, rx) = mpsc::channel();
         self.logs.clear();
@@ -462,7 +472,10 @@ impl GuiApp {
                     let _ = tx.send(GuiMessage::Done(stats, None));
                 }
                 Err(err) => {
-                    let _ = tx.send(GuiMessage::Done(ProcessStats::default(), Some(err.to_string())));
+                    let _ = tx.send(GuiMessage::Done(
+                        ProcessStats::default(),
+                        Some(err.to_string()),
+                    ));
                 }
             }
         });
@@ -493,10 +506,16 @@ impl eframe::App for GuiApp {
         egui::TopBottomPanel::bottom("footer").show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(5.0);
-                ui.label(egui::RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).size(10.0).color(egui::Color32::GRAY));
+                ui.label(
+                    egui::RichText::new(format!("v{}", env!("CARGO_PKG_VERSION")))
+                        .size(10.0)
+                        .color(egui::Color32::GRAY),
+                );
                 ui.hyperlink_to(
-                    egui::RichText::new("https://github.com/Scaletta/PicoCover").size(10.0).color(egui::Color32::from_rgb(100, 150, 200)),
-                    "https://github.com/Scaletta/PicoCover"
+                    egui::RichText::new("https://github.com/Scaletta/PicoCover")
+                        .size(10.0)
+                        .color(egui::Color32::from_rgb(100, 150, 200)),
+                    "https://github.com/Scaletta/PicoCover",
                 );
                 ui.add_space(5.0);
             });
@@ -505,21 +524,28 @@ impl eframe::App for GuiApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);
             ui.vertical_centered(|ui| {
-                
                 if self.logo_texture.is_none() {
                     if let Some(image_data) = load_logo_image() {
-                        self.logo_texture = Some(ctx.load_texture("logo", image_data, Default::default()));
+                        self.logo_texture =
+                            Some(ctx.load_texture("logo", image_data, Default::default()));
                     }
                 }
 
                 if let Some(texture) = &self.logo_texture {
-                    ui.image(egui::load::SizedTexture::new(texture.id(), egui::vec2(64.0, 64.0)));
+                    ui.image(egui::load::SizedTexture::new(
+                        texture.id(),
+                        egui::vec2(64.0, 64.0),
+                    ));
                     ui.add_space(10.0);
                 }
 
                 ui.heading(egui::RichText::new("PicoCover").size(24.0));
                 ui.add_space(5.0);
-                ui.label(egui::RichText::new("Automatically download NDS cover art for Pico Launcher").size(12.0).color(egui::Color32::GRAY));
+                ui.label(
+                    egui::RichText::new("Automatically download NDS cover art for Pico Launcher")
+                        .size(12.0)
+                        .color(egui::Color32::GRAY),
+                );
             });
             ui.add_space(15.0);
 
@@ -527,12 +553,18 @@ impl eframe::App for GuiApp {
                 ui.set_min_width(ui.available_width());
                 ui.label(egui::RichText::new("📁 Select Drive").strong());
                 ui.add_space(5.0);
-                
+
                 if self.drives.is_empty() {
                     ui.horizontal(|ui| {
-                        ui.colored_label(egui::Color32::from_rgb(200, 100, 100), "⚠ No drives with _pico folder found");
+                        ui.colored_label(
+                            egui::Color32::from_rgb(200, 100, 100),
+                            "⚠ No drives with _pico folder found",
+                        );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if ui.button(egui::RichText::new("🔄 Refresh").size(14.0)).clicked() {
+                            if ui
+                                .button(egui::RichText::new("🔄 Refresh").size(14.0))
+                                .clicked()
+                            {
                                 self.drives = detect_drives();
                                 if self.selected_drive >= self.drives.len() {
                                     self.selected_drive = 0;
@@ -550,8 +582,11 @@ impl eframe::App for GuiApp {
                                     ui.selectable_value(&mut self.selected_drive, idx, &drive.path);
                                 }
                             });
-                        
-                        if ui.button(egui::RichText::new("🔄 Refresh").size(14.0)).clicked() {
+
+                        if ui
+                            .button(egui::RichText::new("🔄 Refresh").size(14.0))
+                            .clicked()
+                        {
                             self.drives = detect_drives();
                             if self.selected_drive >= self.drives.len() {
                                 self.selected_drive = 0;
@@ -560,7 +595,7 @@ impl eframe::App for GuiApp {
                     });
                 }
             });
-            
+
             ui.add_space(10.0);
 
             ui.vertical_centered(|ui| {
@@ -570,10 +605,10 @@ impl eframe::App for GuiApp {
                 } else {
                     "▶ Start Processing"
                 };
-                
+
                 let button = egui::Button::new(egui::RichText::new(button_text).size(16.0))
                     .min_size(egui::vec2(200.0, 40.0));
-                
+
                 if ui.add_enabled(start_enabled, button).clicked() {
                     if let Err(err) = self.start_processing() {
                         self.error = Some(err.to_string());
@@ -581,7 +616,7 @@ impl eframe::App for GuiApp {
                     }
                 }
             });
-            
+
             ui.add_space(10.0);
 
             if let Some(stats) = self.stats {
@@ -592,14 +627,26 @@ impl eframe::App for GuiApp {
                     });
                     ui.add_space(5.0);
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new(format!("📝 Processed: {}", stats.processed)));
+                        ui.label(egui::RichText::new(format!(
+                            "📝 Processed: {}",
+                            stats.processed
+                        )));
                         ui.separator();
-                        ui.colored_label(egui::Color32::from_rgb(100, 200, 100), format!("💾 Saved: {}", stats.saved));
+                        ui.colored_label(
+                            egui::Color32::from_rgb(100, 200, 100),
+                            format!("💾 Saved: {}", stats.saved),
+                        );
                         ui.separator();
-                        ui.colored_label(egui::Color32::from_rgb(200, 200, 100), format!("⏭ Skipped: {}", stats.skipped));
+                        ui.colored_label(
+                            egui::Color32::from_rgb(200, 200, 100),
+                            format!("⏭ Skipped: {}", stats.skipped),
+                        );
                         ui.separator();
                         if stats.errors > 0 {
-                            ui.colored_label(egui::Color32::from_rgb(200, 100, 100), format!("❌ Errors: {}", stats.errors));
+                            ui.colored_label(
+                                egui::Color32::from_rgb(200, 100, 100),
+                                format!("❌ Errors: {}", stats.errors),
+                            );
                         } else {
                             ui.label(format!("❌ Errors: {}", stats.errors));
                         }
@@ -610,8 +657,10 @@ impl eframe::App for GuiApp {
 
             if let Some(err) = &self.error {
                 ui.add_space(5.0);
-                ui.colored_label(egui::Color32::from_rgb(220, 80, 80), 
-                    egui::RichText::new(format!("❌ Error: {}", err)).strong());
+                ui.colored_label(
+                    egui::Color32::from_rgb(220, 80, 80),
+                    egui::RichText::new(format!("❌ Error: {}", err)).strong(),
+                );
                 ui.add_space(5.0);
             }
 
@@ -624,17 +673,32 @@ impl eframe::App for GuiApp {
                     .max_height(250.0)
                     .show(ui, |ui| {
                         if self.logs.is_empty() && !self.running {
-                            ui.colored_label(egui::Color32::GRAY, "Logs will appear here when processing starts...");
+                            ui.colored_label(
+                                egui::Color32::GRAY,
+                                "Logs will appear here when processing starts...",
+                            );
                         }
                         for line in &self.logs {
                             let text = if line.contains("stored") {
-                                egui::RichText::new(line).size(11.0).color(egui::Color32::from_rgb(100, 200, 100)).monospace()
+                                egui::RichText::new(line)
+                                    .size(11.0)
+                                    .color(egui::Color32::from_rgb(100, 200, 100))
+                                    .monospace()
                             } else if line.contains("skipped") {
-                                egui::RichText::new(line).size(11.0).color(egui::Color32::from_rgb(200, 200, 100)).monospace()
+                                egui::RichText::new(line)
+                                    .size(11.0)
+                                    .color(egui::Color32::from_rgb(200, 200, 100))
+                                    .monospace()
                             } else if line.contains("error") {
-                                egui::RichText::new(line).size(11.0).color(egui::Color32::from_rgb(200, 100, 100)).monospace()
+                                egui::RichText::new(line)
+                                    .size(11.0)
+                                    .color(egui::Color32::from_rgb(200, 100, 100))
+                                    .monospace()
                             } else {
-                                egui::RichText::new(line).size(11.0).color(egui::Color32::from_rgb(180, 180, 180)).monospace()
+                                egui::RichText::new(line)
+                                    .size(11.0)
+                                    .color(egui::Color32::from_rgb(180, 180, 180))
+                                    .monospace()
                             };
                             ui.label(text);
                         }
@@ -648,12 +712,6 @@ impl eframe::App for GuiApp {
     }
 }
 
-impl Default for UiConfig {
-    fn default() -> Self {
-        Self {}
-    }
-}
-
 impl UiConfig {
     fn to_config(&self, drive_path: &str) -> Result<Config> {
         let root = PathBuf::from(drive_path);
@@ -663,7 +721,12 @@ impl UiConfig {
 
         Ok(Config {
             root,
-            regions: vec!["EN".to_string(), "US".to_string(), "JA".to_string(), "EU".to_string()],
+            regions: vec![
+                "EN".to_string(),
+                "US".to_string(),
+                "JA".to_string(),
+                "EU".to_string(),
+            ],
             url_templates: vec![
                 "https://art.gametdb.com/ds/cover/{region}/{id}.png".to_string(),
                 "https://art.gametdb.com/ds/cover/{region}/{id}.jpg".to_string(),

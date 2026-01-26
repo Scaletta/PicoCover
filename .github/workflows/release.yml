@@ -53,9 +53,9 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp pico_launcher_cover_tool.exe ${{ matrix.asset_name }}
+            cp pico-cover.exe ${{ matrix.asset_name }}
           else
-            cp pico_launcher_cover_tool ${{ matrix.asset_name }}
+            cp pico-cover ${{ matrix.asset_name }}
             chmod +x ${{ matrix.asset_name }}
           fi
 
