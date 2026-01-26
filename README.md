@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🎮 PicoCover
+# PicoCover
+
+![Banner](./assets/github-banner.png)
 
 **Automatically download and convert Nintendo DS cover art for Pico Launcher**
 
@@ -8,7 +10,12 @@
 [![Rust](https://img.shields.io/badge/rust-1.81%2B-orange.svg)](https://www.rust-lang.org/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/Scaletta/PicoCover/releases)
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/scaletta/PicoCover)
+![GitHub downloads](https://img.shields.io/github/downloads/scaletta/PicoCover/total)
+![GitHub release date](https://img.shields.io/github/release-date/scaletta/PicoCover)
+
 *Cross-platform tool to fetch GameTDB cover art, convert to 8bpp BMP format, and organize for [Pico Launcher](https://github.com/LNH-team/pico-launcher) by [LNH-team](https://github.com/LNH-team)*
+
 
 </div>
 
@@ -32,6 +39,10 @@
 
 ### Option 1: Download Pre-built Binary
 Download the latest release for your platform from the [Releases](https://github.com/Scaletta/PicoCover/releases) page.
+
+[![Download latest](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/scaletta/PicoCover/releases/latest)
+
+
 
 ### Option 2: Build from Source
 ```bash
