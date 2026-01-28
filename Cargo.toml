@@ -2,12 +2,16 @@
 name = "pico-cover"
 version = "0.1.0"
 edition = "2021"
-default-run = "pico-cover"
 repository = "https://github.com/Scaletta/PicoCover"
 description = "Automatically download and convert Nintendo DS cover art for Pico Launcher"
 license = "CC-BY-NC-4.0"
 readme = "README.md"
 build = "build.rs"
+
+[[bin]]
+name = "pico_cover"
+path = "src/main.rs"
+
 
 [dependencies]
 anyhow = "1.0"
@@ -28,5 +32,17 @@ winres = "0.1"
 [package.metadata.winres]
 ProductName = "PicoCover"
 FileDescription = "Automatically download NDS cover art for Pico Launcher"
-OriginalFilename = "pico-cover.exe"
+OriginalFilename = "pico_cover.exe"
 LegalCopyright = "Copyright https://github.com/scaletta © 2026"
+
+[package.metadata.bundle]
+name = "PicoCover"
+identifier = "com.scaletta.picocover"
+version = "0.1.0"
+icon = ["assets/icon.png"]
+resources = ["assets/icon.png"]
+category = "Utilities"
+short_description = "Nintendo DS cover art downloader for Pico Launcher"
+long_description = "Automatically download and convert Nintendo DS cover art from GameTDB for Pico Launcher"
+copyright = "Copyright © 2026 Scaletta. Licensed under CC BY-NC 4.0"
+osx_url_schemes = ["com.scaletta.picocover"]

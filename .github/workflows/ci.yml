@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, cargo-bundle ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, cargo-bundle ]
 
 jobs:
   test:
