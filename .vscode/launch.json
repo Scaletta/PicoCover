@@ -5,25 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug executable 'pico-cover'",
+            "name": "Debug executable 'pico_cover'",
             "type": "lldb",
             "request": "launch",
             "cargo": {
                 "args": [
                     "run",
-                    "--bin=pico-cover"
+                    "--bin=pico_cover"
                 ]
             },
             "args": []
         },
         {
-            "name": "Debug unit tests in executable 'pico-cover'",
+            "name": "Debug unit tests in executable 'pico_cover'",
             "type": "lldb",
             "request": "launch",
             "cargo": {
                 "args": [
                     "test",
-                    "--bin=pico-cover"
+                    "--bin=pico_cover"
                 ]
             }
         }

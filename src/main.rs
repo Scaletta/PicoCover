@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod updater;
+
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -416,6 +418,8 @@ struct GuiApp {
     drives: Vec<DriveInfo>,
     selected_drive: usize,
     logo_texture: Option<egui::TextureHandle>,
+    update_available: Option<String>,
+    show_update_dialog: bool,
 }
 
 #[derive(Clone, Default)]
@@ -431,6 +435,9 @@ impl GuiApp {
         let drives = detect_drives();
         let selected_drive = drives.iter().position(|d| d.has_pico).unwrap_or(0);
 
+        // Check for updates in background
+        let update_available = updater::check_and_notify_update();
+
         Self {
             ui_config: UiConfig::default(),
             logs: Vec::new(),
@@ -441,6 +448,8 @@ impl GuiApp {
             drives,
             selected_drive,
             logo_texture: None,
+            update_available,
+            show_update_dialog: false,
         }
     }
 
@@ -548,6 +557,67 @@ impl eframe::App for GuiApp {
                 );
             });
             ui.add_space(15.0);
+
+            // Update notification banner
+            if let Some(new_version) = &self.update_available {
+                if !self.show_update_dialog {
+                    ui.group(|ui| {
+                        ui.set_min_width(ui.available_width());
+                        ui.horizontal(|ui| {
+                            ui.colored_label(
+                                egui::Color32::from_rgb(100, 200, 100),
+                                format!("🎉 Update available: v{}", new_version),
+                            );
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui.button("Update Now").clicked() {
+                                        self.show_update_dialog = true;
+                                    }
+                                },
+                            );
+                        });
+                    });
+                    ui.add_space(10.0);
+                }
+            }
+
+            // Update dialog
+            if self.show_update_dialog {
+                egui::Window::new("Update Available")
+                    .collapsible(false)
+                    .resizable(false)
+                    .show(ctx, |ui| {
+                        if let Some(new_version) = &self.update_available {
+                            ui.label(format!("A new version (v{}) is available!", new_version));
+                            ui.add_space(10.0);
+                            ui.label("PicoCover will restart after updating.");
+                            ui.add_space(10.0);
+                            ui.horizontal(|ui| {
+                                if ui.button("Update Now").clicked() {
+                                    ui.label("Downloading update...");
+                                    match updater::perform_update() {
+                                        Ok(_) => {
+                                            ui.label(
+                                                "PicoCover update successful! Please restart.",
+                                            );
+                                        }
+                                        Err(e) => {
+                                            ui.colored_label(
+                                                egui::Color32::RED,
+                                                format!("Update failed: {}", e),
+                                            );
+                                        }
+                                    }
+                                    self.show_update_dialog = false;
+                                }
+                                if ui.button("Later").clicked() {
+                                    self.show_update_dialog = false;
+                                }
+                            });
+                        }
+                    });
+            }
 
             ui.group(|ui| {
                 ui.set_min_width(ui.available_width());
