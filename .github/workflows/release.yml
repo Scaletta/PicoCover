@@ -83,12 +83,24 @@ jobs:
             
             # Bundle for user downloads
             if [ "${{ matrix.os }}" = "macos-latest" ]; then
-              # Create a temporary directory for DMG contents
-              mkdir -p dmg_contents
-              cp -r bundle/osx/PicoCover.app dmg_contents/
+              # Ad-hoc sign the app to reduce Gatekeeper warnings
+              codesign --force --deep --sign - bundle/osx/PicoCover.app
               
-              # Create DMG in the current directory
-              hdiutil create -volname "PicoCover" -srcfolder dmg_contents -ov -format UDZO "${{ matrix.asset_name }}.dmg"
+              # Install create-dmg for nice DMG with arrow
+              brew install create-dmg
+              
+              # Create DMG with nice layout and arrow
+              create-dmg \
+                --volname "PicoCover" \
+                --window-pos 200 120 \
+                --window-size 600 400 \
+                --icon-size 100 \
+                --icon "PicoCover.app" 150 150 \
+                --hide-extension "PicoCover.app" \
+                --app-drop-link 450 150 \
+                --no-internet-enable \
+                "${{ matrix.asset_name }}.dmg" \
+                bundle/osx/PicoCover.app
               rm -rf dmg_contents
             elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
               # Find and copy the .deb package (cargo-bundle names it with version)
