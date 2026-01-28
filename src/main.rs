@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use eframe::{egui, NativeOptions};
+use eframe::{NativeOptions, egui};
 
 #[derive(Parser, Debug)]
 #[command(

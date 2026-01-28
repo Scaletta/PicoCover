@@ -5,8 +5,8 @@ use std::thread;
 use anyhow::anyhow;
 use eframe::egui;
 
+use crate::processing::{ProcessStats, process_root};
 use crate::{Config, updater};
-use crate::processing::{process_root, ProcessStats};
 
 #[derive(Clone)]
 pub struct DriveInfo {
@@ -192,11 +192,11 @@ impl eframe::App for GuiApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);
             ui.vertical_centered(|ui| {
-                if self.logo_texture.is_none() {
-                    if let Some(image_data) = load_logo_image() {
-                        self.logo_texture =
-                            Some(ctx.load_texture("logo", image_data, Default::default()));
-                    }
+                if self.logo_texture.is_none()
+                    && let Some(image_data) = load_logo_image()
+                {
+                    self.logo_texture =
+                        Some(ctx.load_texture("logo", image_data, Default::default()));
                 }
 
                 if let Some(texture) = &self.logo_texture {
@@ -218,27 +218,24 @@ impl eframe::App for GuiApp {
             ui.add_space(15.0);
 
             // Update notification banner
-            if let Some(new_version) = &self.update_available {
-                if !self.show_update_dialog {
-                    ui.group(|ui| {
-                        ui.set_min_width(ui.available_width());
-                        ui.horizontal(|ui| {
-                            ui.colored_label(
-                                egui::Color32::from_rgb(100, 200, 100),
-                                format!("🎉 Update available: v{}", new_version),
-                            );
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    if ui.button("Update Now").clicked() {
-                                        self.show_update_dialog = true;
-                                    }
-                                },
-                            );
+            if let Some(new_version) = &self.update_available
+                && !self.show_update_dialog
+            {
+                ui.group(|ui| {
+                    ui.set_min_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        ui.colored_label(
+                            egui::Color32::from_rgb(100, 200, 100),
+                            format!("🎉 Update available: v{}", new_version),
+                        );
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if ui.button("Update Now").clicked() {
+                                self.show_update_dialog = true;
+                            }
                         });
                     });
-                    ui.add_space(10.0);
-                }
+                });
+                ui.add_space(10.0);
             }
 
             // Update dialog
@@ -344,11 +341,11 @@ impl eframe::App for GuiApp {
                 let button = egui::Button::new(egui::RichText::new(button_text).size(16.0))
                     .min_size(egui::vec2(200.0, 40.0));
 
-                if ui.add_enabled(start_enabled, button).clicked() {
-                    if let Err(err) = self.start_processing() {
-                        self.error = Some(err.to_string());
-                        self.running = false;
-                    }
+                if ui.add_enabled(start_enabled, button).clicked()
+                    && let Err(err) = self.start_processing()
+                {
+                    self.error = Some(err.to_string());
+                    self.running = false;
                 }
             });
 
@@ -401,20 +398,26 @@ impl eframe::App for GuiApp {
 
             ui.group(|ui| {
                 ui.set_min_width(ui.available_width());
-                
+
                 // Tab selector
                 ui.horizontal(|ui| {
-                    if ui.selectable_label(!self.show_games_list, "📄 Output Log").clicked() {
+                    if ui
+                        .selectable_label(!self.show_games_list, "📄 Output Log")
+                        .clicked()
+                    {
                         self.show_games_list = false;
                     }
-                    if ui.selectable_label(self.show_games_list, "📋 Game Lists").clicked() {
+                    if ui
+                        .selectable_label(self.show_games_list, "📋 Game Lists")
+                        .clicked()
+                    {
                         self.show_games_list = true;
                     }
                 });
-                
+
                 ui.separator();
                 ui.add_space(5.0);
-                
+
                 if !self.show_games_list {
                     // Output Log view
                     egui::ScrollArea::vertical()
@@ -456,12 +459,21 @@ impl eframe::App for GuiApp {
                 } else if let Some(stats) = &self.stats {
                     // Game Lists view
                     if !stats.skipped_games.is_empty() {
-                        if ui.button(if self.show_skipped { "▼ Skipped Games" } else { "► Skipped Games" })
-                            .on_hover_text(format!("Click to toggle ({} games)", stats.skipped_games.len()))
-                            .clicked() {
+                        if ui
+                            .button(if self.show_skipped {
+                                "▼ Skipped Games"
+                            } else {
+                                "► Skipped Games"
+                            })
+                            .on_hover_text(format!(
+                                "Click to toggle ({} games)",
+                                stats.skipped_games.len()
+                            ))
+                            .clicked()
+                        {
                             self.show_skipped = !self.show_skipped;
                         }
-                        
+
                         if self.show_skipped {
                             ui.add_space(3.0);
                             egui::ScrollArea::vertical()
@@ -477,15 +489,24 @@ impl eframe::App for GuiApp {
                                 });
                         }
                     }
-                    
+
                     if !stats.failed_games.is_empty() {
                         ui.add_space(8.0);
-                        if ui.button(if self.show_failed { "▼ Failed Games" } else { "► Failed Games" })
-                            .on_hover_text(format!("Click to toggle ({} games)", stats.failed_games.len()))
-                            .clicked() {
+                        if ui
+                            .button(if self.show_failed {
+                                "▼ Failed Games"
+                            } else {
+                                "► Failed Games"
+                            })
+                            .on_hover_text(format!(
+                                "Click to toggle ({} games)",
+                                stats.failed_games.len()
+                            ))
+                            .clicked()
+                        {
                             self.show_failed = !self.show_failed;
                         }
-                        
+
                         if self.show_failed {
                             ui.add_space(3.0);
                             egui::ScrollArea::vertical()

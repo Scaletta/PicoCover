@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use color_quant::NeuQuant;
-use image::imageops::{replace, resize, FilterType};
+use image::imageops::{FilterType, replace, resize};
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rayon::prelude::*;
 use reqwest::blocking::Client;
@@ -80,7 +80,7 @@ pub fn process_root(config: &Config, log: impl Fn(String) + Send + Sync) -> Resu
                     stats.processed += 1;
                 }
 
-                match handle_file(&path, &output_dir, &config, &client, &log) {
+                match handle_file(path, &output_dir, &config, &client, &log) {
                     Ok(true) => {
                         let mut stats = stats.lock().unwrap();
                         stats.saved += 1;
@@ -142,14 +142,27 @@ fn handle_file(
 
     let target = output_dir.join(format!("{game_code}.bmp"));
     if target.exists() && !config.overwrite {
-        log(format!("⏭ Skipped {} [{}] - already exists", game_name, game_code));
+        log(format!(
+            "⏭ Skipped {} [{}] - already exists",
+            game_name, game_code
+        ));
         return Ok(false);
     }
 
-    let image = match fetch_cover(&game_code, game_name, &config.regions, &config.url_templates, client, log) {
+    let image = match fetch_cover(
+        &game_code,
+        game_name,
+        &config.regions,
+        &config.url_templates,
+        client,
+        log,
+    ) {
         Some(img) => img,
         None => {
-            log(format!("❌ Not found {} [{}] - no covers available", game_name, game_code));
+            log(format!(
+                "❌ Not found {} [{}] - no covers available",
+                game_name, game_code
+            ));
             return Ok(false);
         }
     };
@@ -189,7 +202,10 @@ fn fetch_cover(
     log: &Arc<impl Fn(String) + Send + Sync + ?Sized>,
 ) -> Option<DynamicImage> {
     for region in regions {
-        log(format!("🔍 Checking {} [{}] - {}", game_name, game_code, region));
+        log(format!(
+            "🔍 Checking {} [{}] - {}",
+            game_name, game_code, region
+        ));
         for template in templates {
             let url = template
                 .replace("{region}", region)
@@ -198,7 +214,10 @@ fn fetch_cover(
                 Ok(resp) if resp.status().is_success() => match resp.bytes() {
                     Ok(bytes) => match image::load_from_memory(&bytes) {
                         Ok(img) => {
-                            log(format!("✅ Found {} [{}] - {}", game_name, game_code, region));
+                            log(format!(
+                                "✅ Found {} [{}] - {}",
+                                game_name, game_code, region
+                            ));
                             return Some(img);
                         }
                         Err(_) => {
