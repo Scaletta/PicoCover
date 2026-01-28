@@ -59,22 +59,56 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: cargo bundle --release --target ${{ matrix.target }}
 
-      - name: Prepare artifact
+      - name: Prepare artifacts
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
+          
+          # Windows: Just copy the exe
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             cp pico_cover.exe ${{ matrix.asset_name }}
+          
+          # macOS/Linux: Copy both bundle AND standalone binary
           else
+            # Standalone binary for auto-updater
             cp pico_cover ${{ matrix.asset_name }}
             chmod +x ${{ matrix.asset_name }}
+            
+            # Bundle for user downloads
+            if [ "${{ matrix.os }}" = "macos-latest" ]; then
+              # Create a temporary directory for DMG contents
+              mkdir -p dmg_contents
+              cp -r bundle/osx/PicoCover.app dmg_contents/
+              
+              # Create DMG
+              hdiutil create -volname "PicoCover" -srcfolder dmg_contents -ov -format UDZO ../../../${{ matrix.asset_name }}.dmg
+              rm -rf dmg_contents
+              cd ../../..
+            elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+              # Copy the .deb package
+              cp bundle/deb/*.deb ../../../${{ matrix.asset_name }}.deb
+            fi
           fi
 
-      - name: Upload artifact
+      - name: Upload standalone binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+
+      - name: Upload macOS bundle
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}.dmg
+          path: target/${{ matrix.target }}/release/${{ matrix.asset_name }}.dmg
+
+      - name: Upload Linux package
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}.deb
+          path: target/${{ matrix.target }}/release/${{ matrix.asset_name }}.deb
 
   release:
     name: Create Release
@@ -100,5 +134,30 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## 📦 Downloads
+            
+            ### Windows
+            - **[pico_cover-windows-x64.exe](../../releases/download/${{ github.ref_name }}/pico_cover-windows-x64.exe)** - Standalone executable
+            
+            ### macOS
+            - **[pico_cover-macos-x64.dmg](../../releases/download/${{ github.ref_name }}/pico_cover-macos-x64.dmg)** - Intel Mac disk image (recommended)
+            - **[pico_cover-macos-arm64.dmg](../../releases/download/${{ github.ref_name }}/pico_cover-macos-arm64.dmg)** - Apple Silicon disk image (recommended)
+            - [pico_cover-macos-x64](../../releases/download/${{ github.ref_name }}/pico_cover-macos-x64) - Intel standalone binary (for auto-updater)
+            - [pico_cover-macos-arm64](../../releases/download/${{ github.ref_name }}/pico_cover-macos-arm64) - Apple Silicon standalone binary (for auto-updater)
+            
+            ### Linux
+            - **[pico_cover-linux-x64.deb](../../releases/download/${{ github.ref_name }}/pico_cover-linux-x64.deb)** - Debian package (recommended)
+            - [pico_cover-linux-x64](../../releases/download/${{ github.ref_name }}/pico_cover-linux-x64) - Standalone binary (for auto-updater)
+            
+            ---
+            
+            ### 🔄 Auto-Update
+            The app includes automatic update checking. When a new version is available, you'll see a notification in the GUI.
+            
+            ### ℹ️ First Time Installation
+            - **Windows**: Download and run the `.exe` file
+            - **macOS**: Download `.dmg`, open it, and drag PicoCover to Applications folder. Right-click → Open on first launch
+            - **Linux**: Install with `sudo dpkg -i pico_cover-linux-x64.deb` or run the standalone binary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

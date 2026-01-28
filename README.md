@@ -25,9 +25,11 @@
 
 - 🖥️ **GUI Mode** – Simple interface with automatic drive detection
 - ⌨️ **CLI Mode** – Full scriptable control for automation
-- 🔄 **Auto-refresh** – Detects new drives without restarting
+- 🔄 **Auto-update** – Built-in update checker with one-click updates
+- ♻️ **Auto-refresh** – Detects new drives without restarting
 - 🌍 **Multi-region support** – Tries EN, US, JA, EU until a cover is found
 - 🚀 **Fast processing** – Parallel downloads
+- 📦 **Native packages** – DMG for macOS, DEB for Linux, EXE for Windows
 
 ## 📋 Requirements
 
@@ -37,12 +39,19 @@
 
 ## 🚀 Installation
 
-### Option 1: Download Pre-built Binary
-Download the latest release for your platform from the [Releases](https://github.com/Scaletta/PicoCover/releases) page.
+### Option 1: Download Pre-built Package (Recommended)
+Download the latest release for your platform from the [Releases](https://github.com/Scaletta/PicoCover/releases) page:
+
+- **Windows**: `pico_cover-windows-x64.exe` – Standalone executable
+- **macOS**: `pico_cover-macos-x64.dmg` (Intel) or `pico_cover-macos-arm64.dmg` (Apple Silicon) – Disk image
+- **Linux**: `pico_cover-linux-x64.deb` – Debian package
 
 [![Download latest](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/scaletta/PicoCover/releases/latest)
 
-
+**Installation instructions:**
+- **Windows**: Download and run the `.exe` file
+- **macOS**: Download `.dmg`, open it, drag PicoCover to Applications. Right-click → Open on first launch
+- **Linux**: `sudo dpkg -i pico_cover-linux-x64.deb` or run the standalone binary
 
 ### Option 2: Build from Source
 ```bash
@@ -51,19 +60,19 @@ cd PicoCover
 cargo build --release
 ```
 
-**Cross-compile for other platforms:**
+The binary will be in `target/release/pico_cover` (or `pico_cover.exe` on Windows).
+
+**Build native packages:**
 ```bash
-# Windows (x64)
-cargo build --release --target x86_64-pc-windows-msvc
+# Install cargo-bundle
+cargo install cargo-bundle
 
-# macOS (Intel)
-cargo build --release --target x86_64-apple-darwin
+# macOS .app bundle
+cargo bundle --release --target x86_64-apple-darwin     # Intel
+cargo bundle --release --target aarch64-apple-darwin    # Apple Silicon
 
-# macOS (Apple Silicon)
-cargo build --release --target aarch64-apple-darwin
-
-# Linux (x64)
-cargo build --release --target x86_64-unknown-linux-gnu
+# Linux .deb package
+cargo bundle --release --target x86_64-unknown-linux-gnu
 ```
 
 ## 🎯 Usage
@@ -72,15 +81,21 @@ cargo build --release --target x86_64-unknown-linux-gnu
 
 Simply run the executable:
 ```bash
-./pico-cover  # or double-click pico-cover.exe on Windows
+./pico_cover  # or double-click pico_cover.exe on Windows
 ```
 
 **What the GUI does:**
 1. 🔍 **Auto-detects** all drives with `_pico` folder
-2. 🔄 **Refresh button** to detect newly connected devices
-3. 📊 **Real-time statistics** showing processed/saved/skipped/errors
-4. 📝 **Color-coded logs** for easy monitoring
-5. ⚡ **One-click processing** – just select drive and click Start
+2. 🎉 **Update notifications** when new versions are available
+3. 🔄 **Refresh button** to detect newly connected devices
+4. 📊 **Real-time statistics** showing processed/saved/skipped/errors
+5. 📝 **Color-coded logs** for easy monitoring
+6. ⚡ **One-click processing** – just select drive and click Start
+
+**Auto-Update:**
+- The app automatically checks for updates on startup
+- When a new version is available, a notification banner appears
+- Click "Update Now" to download and install (app restarts automatically)
 
 Covers are saved to: `<selected-drive>/_pico/covers/nds/<GAMECODE>.bmp`
 
@@ -89,7 +104,7 @@ Covers are saved to: `<selected-drive>/_pico/covers/nds/<GAMECODE>.bmp`
 For scripting, automation, or advanced control:
 
 ```bash
-pico-cover --cli --root /path/to/roms \
+pico_cover --cli --root /path/to/roms \
   --regions EN,US,JA,EU \
   --overwrite \
   --timeout-secs 15
@@ -108,10 +123,10 @@ pico-cover --cli --root /path/to/roms \
 **Example:**
 ```bash
 # Process D: drive, overwrite existing covers
-pico-cover --cli --root D:\ --overwrite
+pico_cover --cli --root D:\ --overwrite
 
 # Custom regions priority
-pico-cover --cli --root /media/sdcard --regions JP,US,EN
+pico_cover --cli --root /media/sdcard --regions JP,US,EN
 ```
 
 ## 🔧 How It Works
