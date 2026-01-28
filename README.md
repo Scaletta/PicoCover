@@ -23,12 +23,14 @@
 
 ## ✨ Features
 
-- 🖥️ **GUI Mode** – Simple interface with automatic drive detection
+- 🖥️ **GUI Mode** – Intuitive interface with automatic drive detection and tabbed view
+  - Collapsible game lists (skipped/failed) for quick review
+  - Overwrite toggle
 - ⌨️ **CLI Mode** – Full scriptable control for automation
 - 🔄 **Auto-update** – Built-in update checker with one-click updates
 - ♻️ **Auto-refresh** – Detects new drives without restarting
 - 🌍 **Multi-region support** – Tries EN, US, JA, EU until a cover is found
-- 🚀 **Fast processing** – Parallel downloads
+- 🚀 **Fast processing** – Parallel downloads with CPU-core adaptive threading
 - 📦 **Native packages** – DMG for macOS, DEB for Linux, EXE for Windows
 
 ## 📋 Requirements
@@ -50,7 +52,11 @@ Download the latest release for your platform from the [Releases](https://github
 
 **Installation instructions:**
 - **Windows**: Download and run the `.exe` file
-- **macOS**: Download `.dmg`, open it, drag PicoCover to Applications. Right-click → Open on first launch
+- **macOS**: 
+  1. Download `.dmg` and open it
+  2. Drag PicoCover to Applications folder
+  3. **First launch**: Right-click PicoCover.app → **Open** → Click **Open** in the dialog
+  4. If you see "damaged" error: Go to **System Settings** → **Privacy & Security** → Scroll down and click **Open Anyway**
 - **Linux**: `sudo dpkg -i pico_cover-linux-x64.deb` or run the standalone binary
 
 ### Option 2: Build from Source
@@ -89,8 +95,11 @@ Simply run the executable:
 2. 🎉 **Update notifications** when new versions are available
 3. 🔄 **Refresh button** to detect newly connected devices
 4. 📊 **Real-time statistics** showing processed/saved/skipped/errors
-5. 📝 **Color-coded logs** for easy monitoring
+5. � **Tabbed view** – Switch between:
+   - **📄 Output Log** – Color-coded logs with detailed per-file status (green for saved, yellow for skipped, red for errors)
+   - **📋 Game Lists** – Collapsible sections showing skipped and failed games for quick review
 6. ⚡ **One-click processing** – just select drive and click Start
+7. ✅ **Overwrite option** – Checkbox to control whether to overwrite existing covers
 
 **Auto-Update:**
 - The app automatically checks for updates on startup
@@ -118,7 +127,8 @@ pico_cover --cli --root /path/to/roms \
 | `--regions` | Region codes to try (comma-separated) | `EN,US,JA,EU` |
 | `--url-templates` | Custom URL patterns (semicolon-separated) | GameTDB default |
 | `--overwrite` | Overwrite existing BMPs | `false` (skip) |
-| `--timeout-secs` | HTTP request timeout | `15` |
+| `--timeout-secs` | HTTP request timeout in seconds | `15` |
+| `--threads` | Number of parallel download threads | CPU core count |
 
 **Example:**
 ```bash
@@ -127,6 +137,9 @@ pico_cover --cli --root D:\ --overwrite
 
 # Custom regions priority
 pico_cover --cli --root /media/sdcard --regions JP,US,EN
+
+# Use 4 threads for slower connections
+pico_cover --cli --root /media/sdcard --threads 4
 ```
 
 ## 🔧 How It Works
