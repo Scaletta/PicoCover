@@ -1,4 +1,4 @@
-use std::path::{Path};
+use std::path::Path;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 
