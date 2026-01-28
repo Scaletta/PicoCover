@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ main, master, cargo-bundle ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main, master, cargo-bundle ]
+    branches: [ main, master ]
 
 jobs:
   test:
@@ -19,6 +19,13 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+          cache-targets: true
 
       - name: Install dependencies
         run: |
