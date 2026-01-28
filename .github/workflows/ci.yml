@@ -20,6 +20,13 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+          cache-targets: true
+
       - name: Install dependencies
         run: |
           sudo apt-get update
