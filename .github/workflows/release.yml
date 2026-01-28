@@ -80,13 +80,17 @@ jobs:
               mkdir -p dmg_contents
               cp -r bundle/osx/PicoCover.app dmg_contents/
               
-              # Create DMG
-              hdiutil create -volname "PicoCover" -srcfolder dmg_contents -ov -format UDZO ../../../${{ matrix.asset_name }}.dmg
+              # Create DMG in the current directory
+              hdiutil create -volname "PicoCover" -srcfolder dmg_contents -ov -format UDZO "${{ matrix.asset_name }}.dmg"
               rm -rf dmg_contents
-              cd ../../..
             elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-              # Copy the .deb package
-              cp bundle/deb/*.deb ../../../${{ matrix.asset_name }}.deb
+              # Find and copy the .deb package (cargo-bundle names it with version)
+              if [ -f bundle/deb/*.deb ]; then
+                cp bundle/deb/*.deb "${{ matrix.asset_name }}.deb"
+              else
+                echo "Warning: No .deb file found in bundle/deb/"
+                ls -la bundle/deb/ || echo "bundle/deb/ does not exist"
+              fi
             fi
           fi
 
