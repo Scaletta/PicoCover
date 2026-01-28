@@ -7,7 +7,7 @@ echo "🔍 Running code checks before commit..."
 
 # Format code
 echo "📝 Formatting code with cargo fmt..."
-cargo fmt
+cargo fmt -- --check
 
 # Check with clippy
 echo "🎯 Checking with clippy..."
