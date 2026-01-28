@@ -1,6 +1,8 @@
-use std::path::Path;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
+
+#[cfg(windows)]
+use std::path::Path;
 
 #[cfg(not(windows))]
 use std::fs;
