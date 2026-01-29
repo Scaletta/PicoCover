@@ -5,6 +5,7 @@ mod processing;
 mod updater;
 
 use std::path::PathBuf;
+use std::fs;
 
 use anyhow::Result;
 use clap::Parser;
@@ -68,7 +69,7 @@ fn main() -> Result<()> {
     if args.cli {
         run_cli(args)?;
     } else {
-        run_gui()?;
+        run_gui()?
     }
     Ok(())
 }
@@ -100,10 +101,41 @@ fn run_gui() -> Result<()> {
         viewport,
         ..NativeOptions::default()
     };
+
+    // Run the native GUI. In the creation callback we try to load an optional font file
+    // at runtime from assets/NotoSans-Regular.ttf. If present, it will be registered
+    // with egui as the primary proportional font and added as a fallback for monospace.
     eframe::run_native(
         "PicoCover",
         options,
-        Box::new(|_| Ok(Box::new(gui::GuiApp::new()))),
+        Box::new(|cc| {
+            use egui::{FontDefinitions, FontFamily, FontData};
+
+            // Attempt to read a TTF font from the assets directory at runtime. This allows
+            // packagers to include a font (for example Noto Sans) next to the executable
+            // under an "assets/" folder without forcing a compile-time embedding.
+            if let Ok(bytes) = fs::read("assets/NotoSans-Regular.ttf") {
+                let mut fonts = FontDefinitions::default();
+                fonts.font_data.insert(
+                    "NotoSans".to_owned(),
+                    FontData::from_owned(bytes),
+                );
+
+                // Make NotoSans the first choice for proportional text
+                if let Some(proportional) = fonts.families.get_mut(&FontFamily::Proportional) {
+                    proportional.insert(0, "NotoSans".to_owned());
+                }
+
+                // Also add it as a fallback for monospace
+                if let Some(monospace) = fonts.families.get_mut(&FontFamily::Monospace) {
+                    monospace.push("NotoSans".to_owned());
+                }
+
+                cc.egui_ctx.set_fonts(fonts);
+            }
+
+            Ok(Box::new(gui::GuiApp::new()))
+        }),
     )
     .map_err(|e| anyhow::anyhow!(e.to_string()))
 }
