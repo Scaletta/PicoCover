@@ -1,0 +1,26 @@
+[package]
+name = "pico-cover-core"
+version = "0.1.1"
+edition = "2021"
+authors = ["Scaletta"]
+license = "CC-BY-NC-4.0"
+repository = "https://github.com/Scaletta/PicoCover"
+description = "Pure Rust core logic for PicoCover - NDS cover art downloader"
+
+[dependencies]
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+color_quant = "1.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp"] }
+tokio = { version = "1.0", features = ["full"], optional = true }
+reqwest = { version = "0.12", features = ["json"], optional = true }
+
+[features]
+native = ["tokio", "reqwest"]
+wasm = []
+default = []
+
+[lib]
+crate-type = ["rlib"]
+

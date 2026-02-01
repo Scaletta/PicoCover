@@ -1,0 +1,44 @@
+[package]
+name = "pico-cover"
+version = "0.1.1"
+edition = "2021"
+authors = ["Scaletta"]
+license = "CC-BY-NC-4.0"
+repository = "https://github.com/Scaletta/PicoCover"
+description = "Automatically download and convert Nintendo DS cover art for Pico Launcher"
+build = "build.rs"
+
+[[bin]]
+name = "pico_cover"
+path = "src/main.rs"
+
+[dependencies]
+pico-cover-core = { path = "../core" }
+
+# GUI dependencies
+eframe = "0.33"
+egui = "0.33"
+rfd = "0.17"
+rayon = "1.11"
+num_cpus = "1.17"
+self_update = { version = "0.42", features = ["archive-tar", "compression-flate2"] }
+
+# Native runtime dependencies
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+walkdir = "2.5"
+clap = { version = "4.5", features = ["derive"] }
+
+# Common dependencies
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+image = { version = "0.25", features = ["png", "jpeg", "bmp"] }
+color_quant = "1.1"
+
+[target.'cfg(windows)'.dependencies]
+winres = "0.1"
+[build-dependencies]
+winres = "0.1"

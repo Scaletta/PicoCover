@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use eframe::{NativeOptions, egui};
+use eframe::{egui, NativeOptions};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -109,7 +109,7 @@ fn run_gui() -> Result<()> {
 }
 
 fn load_icon() -> Option<egui::IconData> {
-    let bytes = include_bytes!("../assets/icon.png");
+    let bytes = include_bytes!("../../../assets/icon.png");
     let image = image::load_from_memory(bytes).ok()?.into_rgba8();
     let (width, height) = image.dimensions();
     Some(egui::IconData {
