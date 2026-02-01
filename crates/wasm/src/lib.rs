@@ -34,27 +34,16 @@ pub fn process_cover_image(
         .map_err(|e| JsValue::from_str(&format!("Failed to process image: {}", e)))
 }
 
-/// Download cover from GameTDB API
+/// Download cover from PicoCover proxy
 #[wasm_bindgen]
 pub async fn download_cover(game_code: String) -> std::result::Result<Vec<u8>, JsValue> {
-    let regions = vec!["EN", "US", "JA", "EU"];
-    let url_templates = vec![
-        "https://art.gametdb.com/ds/cover/{region}/{id}.png",
-        "https://art.gametdb.com/ds/cover/{region}/{id}.jpg",
-    ];
+    let base_url = "https://picocover.retrosave.games/";
+    let url = format!("{}{}", base_url, game_code);
 
-    for region in &regions {
-        for template in &url_templates {
-            let url = template
-                .replace("{region}", region)
-                .replace("{id}", &game_code);
-
-            if let Ok(response) = gloo_net::http::Request::get(&url).send().await {
-                if response.ok() {
-                    if let Ok(bytes) = response.binary().await {
-                        return Ok(bytes);
-                    }
-                }
+    if let Ok(response) = gloo_net::http::Request::get(&url).send().await {
+        if response.ok() {
+            if let Ok(bytes) = response.binary().await {
+                return Ok(bytes);
             }
         }
     }

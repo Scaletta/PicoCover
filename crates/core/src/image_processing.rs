@@ -21,13 +21,15 @@ impl ImageProcessor {
         let rgba = resized.to_rgba8();
 
         // Quantize colors to 256 colors
-        let quantizer = NeuQuant::new(10, 256, &rgba);
+        // NeuQuant expects raw RGBA bytes
+        let rgba_bytes = rgba.as_raw();
+        let quantizer = NeuQuant::new(10, 256, rgba_bytes);
         let palette = quantizer.color_map_rgb();
 
         // Create indexed image
         let mut indexed_data = Vec::new();
-        for pixel in rgba.pixels() {
-            let idx = quantizer.index_of(&[pixel[0], pixel[1], pixel[2]]);
+        for chunk in rgba_bytes.chunks_exact(4) {
+            let idx = quantizer.index_of(&[chunk[0], chunk[1], chunk[2], chunk[3]]);
             indexed_data.push(idx as u8);
         }
 
