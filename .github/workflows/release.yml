@@ -17,20 +17,20 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: pico-cover.exe
-            asset_name: pico-cover-windows-x64.exe
+            artifact_name: pico_cover.exe
+            asset_name: pico_cover-windows-x64.exe
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: pico-cover
-            asset_name: pico-cover-linux-x64
+            artifact_name: pico_cover
+            asset_name: pico_cover-linux-x64
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: pico-cover
-            asset_name: pico-cover-macos-x64
+            artifact_name: pico_cover
+            asset_name: pico_cover-macos-x64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: pico-cover
-            asset_name: pico-cover-macos-arm64
+            artifact_name: pico_cover
+            asset_name: pico_cover-macos-arm64
 
     steps:
       - name: Checkout code
@@ -56,7 +56,7 @@ jobs:
 
       - name: Build Windows (cargo build)
         if: matrix.os == 'windows-latest'
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build -p pico-cover --release --target ${{ matrix.target }}
 
       - name: Install cargo-bundle
         if: matrix.os != 'windows-latest'
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build macOS/Linux (cargo bundle)
         if: matrix.os != 'windows-latest'
-        run: cargo bundle --release --target ${{ matrix.target }}
+        run: cargo bundle -p pico-cover --release --target ${{ matrix.target }}
 
       - name: Prepare artifacts
         shell: bash
