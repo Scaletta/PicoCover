@@ -10,6 +10,7 @@
  * Deploy: npm run deploy
  * Dev: npm run dev (runs on http://localhost:8787/)
  * Learn more at https://developers.cloudflare.com/workers/
+ * @author Scaletta
  */
 
 const REGIONS = ["EN", "US", "EU", "JP"];
@@ -26,13 +27,22 @@ const defaultHeaders = {
 	...corsHeaders
 };
 
+const jsonHeaders = {
+	"Content-Type": "application/json",
+	...defaultHeaders
+};
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		const gameId = url.pathname.split("/").pop()?.toUpperCase();
 
+		if (!gameId) {
+			return new Response(JSON.stringify({ error: "gameId is required" }), { status: 400, headers: jsonHeaders });
+		}
+
 		if (!gameId || gameId.length !== 4) {
-			return new Response("Invalid gameId", { status: 400, headers: defaultHeaders });
+			return new Response(JSON.stringify({ error: "Invalid gameId. Must be exactly 4 characters." }), { status: 400, headers: jsonHeaders });
 		}
 
 		// Try KV cache first
@@ -75,6 +85,6 @@ export default {
 			}
 		}
 
-		return new Response("Cover not found", { status: 404, headers: defaultHeaders });
+		return new Response(JSON.stringify({ error: "Cover not found for gameId", gameId }), { status: 404, headers: jsonHeaders });
 	},
 } satisfies ExportedHandler<Env>;
