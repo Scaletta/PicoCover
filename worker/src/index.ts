@@ -1,13 +1,14 @@
 /**
- * Welcome to Cloudflare Workers! This is your first worker.
+ * PicoCover Proxy Worker
  *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
+ * Cloudflare Worker that proxies image requests for Nintendo DS game covers.
+ * - Fetches covers from GameTDB API (supports EN, US, EU, JP regions)
+ * - Provides CORS headers for browser access from any origin
+ * - Caches images in KV storage for 7 days
+ * - Returns X-Cache header indicating HIT/MISS
  *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
+ * Deploy: npm run deploy
+ * Dev: npm run dev (runs on http://localhost:8787/)
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
