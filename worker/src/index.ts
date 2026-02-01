@@ -14,26 +14,37 @@
 const REGIONS = ["EN", "US", "EU", "JP"];
 const CACHE_TTL = 604800; // 7 days in seconds
 
+const corsHeaders = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+	"Access-Control-Allow-Headers": "Content-Type"
+};
+
+const defaultHeaders = {
+	"Cache-Control": `public, max-age=${CACHE_TTL}`,
+	...corsHeaders
+};
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		const gameId = url.pathname.split("/").pop()?.toUpperCase();
 
 		if (!gameId || gameId.length !== 4) {
-			return new Response("Invalid gameId", { status: 400 });
+			return new Response("Invalid gameId", { status: 400, headers: defaultHeaders });
 		}
 
 		// Try KV cache first
 		if (env.IMAGE_CACHE) {
 			const cached = await env.IMAGE_CACHE.get(gameId, "arrayBuffer");
 			if (cached) {
-        console.log(`Cache hit for ${gameId}`);
+				console.log(`Cache hit for ${gameId}`);
 				return new Response(cached, {
 					headers: {
 						"Content-Type": "image/jpeg",
-						"Access-Control-Allow-Origin": "*",
 						"Cache-Control": `public, max-age=${CACHE_TTL}`,
-						"X-Cache": "HIT"
+						"X-Cache": "HIT",
+						...corsHeaders
 					}
 				});
 			}
@@ -55,14 +66,14 @@ export default {
 				return new Response(arrayBuffer, {
 					headers: {
 						"Content-Type": "image/jpeg",
-						"Access-Control-Allow-Origin": "*",
 						"Cache-Control": `public, max-age=${CACHE_TTL}`,
-						"X-Cache": "MISS"
+						"X-Cache": "MISS",
+						...corsHeaders
 					}
 				});
 			}
 		}
 
-		return new Response("Cover not found", { status: 404 });
+		return new Response("Cover not found", { status: 404, headers: defaultHeaders });
 	},
 } satisfies ExportedHandler<Env>;
