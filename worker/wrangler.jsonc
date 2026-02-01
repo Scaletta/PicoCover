@@ -15,7 +15,7 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#kv-namespaces
 	 */
 	"kv_namespaces": [
-		{ "binding": "IMAGE_CACHE", "id": "PicoCover_ImageCache", "preview_id": "PicoCover_ImageCache_Preview" }
+		{ "binding": "IMAGE_CACHE", "id": "bbd75006df61453f9348c5ea729cafb6" }
 	],
 	/**
 	 * Smart Placement
