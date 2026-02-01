@@ -41,7 +41,7 @@ impl ImageProcessor {
 
         // BMP Header
         bmp.extend_from_slice(b"BM");
-        let file_size = 14 + 40 + 1024 + (width * height) as u32;
+        let file_size = 14 + 40 + 1024 + (width * height);
         bmp.extend_from_slice(&file_size.to_le_bytes());
         bmp.extend_from_slice(&[0, 0, 0, 0]);
         bmp.extend_from_slice(&(14 + 40 + 1024_u32).to_le_bytes());
