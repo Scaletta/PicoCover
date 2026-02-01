@@ -9,7 +9,14 @@
 	"compatibility_date": "2026-01-28",
 	"observability": {
 		"enabled": true
-	}
+	},
+	/**
+	 * KV Namespace Bindings
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#kv-namespaces
+	 */
+	"kv_namespaces": [
+		{ "binding": "IMAGE_CACHE", "id": "PicoCover_ImageCache", "preview_id": "PicoCover_ImageCache_Preview" }
+	],
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

@@ -12,32 +12,57 @@
  */
 
 const REGIONS = ["EN", "US", "EU", "JP"];
+const CACHE_TTL = 604800; // 7 days in seconds
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-const url = new URL(request.url);
-    const gameId = url.pathname.split("/").pop()?.toUpperCase();
+		const url = new URL(request.url);
+		const gameId = url.pathname.split("/").pop()?.toUpperCase();
 
-    if (!gameId || gameId.length !== 4) {
-      return new Response("Invalid gameId", { status: 400 });
-    }
+		if (!gameId || gameId.length !== 4) {
+			return new Response("Invalid gameId", { status: 400 });
+		}
 
+		// Try KV cache first
+		if (env.IMAGE_CACHE) {
+			const cached = await env.IMAGE_CACHE.get(gameId, "arrayBuffer");
+			if (cached) {
+        console.log(`Cache hit for ${gameId}`);
+				return new Response(cached, {
+					headers: {
+						"Content-Type": "image/jpeg",
+						"Access-Control-Allow-Origin": "*",
+						"Cache-Control": `public, max-age=${CACHE_TTL}`,
+						"X-Cache": "HIT"
+					}
+				});
+			}
+		}
 
-    for (const region of REGIONS) {
-      const target = `https://art.gametdb.com/ds/cover/${region}/${gameId}.jpg`;
-      const res = await fetch(target);
+		// Try to fetch from GameTDB
+		for (const region of REGIONS) {
+			const target = `https://art.gametdb.com/ds/cover/${region}/${gameId}.jpg`;
+			const res = await fetch(target);
 
-      if (res.ok) {
-        return new Response(res.body, {
-          headers: {
-            "Content-Type": "image/jpeg",
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "public, max-age=604800"
-          }
-        });
-      }
-    }
+			if (res.ok) {
+				const arrayBuffer = await res.arrayBuffer();
 
-    return new Response("Cover not found", { status: 404 });
+				// Store in KV cache
+				if (env.IMAGE_CACHE) {
+					ctx.waitUntil(env.IMAGE_CACHE.put(gameId, arrayBuffer, { expirationTtl: CACHE_TTL }));
+				}
+
+				return new Response(arrayBuffer, {
+					headers: {
+						"Content-Type": "image/jpeg",
+						"Access-Control-Allow-Origin": "*",
+						"Cache-Control": `public, max-age=${CACHE_TTL}`,
+						"X-Cache": "MISS"
+					}
+				});
+			}
+		}
+
+		return new Response("Cover not found", { status: 404 });
 	},
 } satisfies ExportedHandler<Env>;
