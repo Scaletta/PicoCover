@@ -13,7 +13,7 @@
  * @author Scaletta
  */
 
-const REGIONS = ["EN", "US", "EU", "JP"];
+const REGIONS = ["EN", "US", "EU", "JA"];
 const CACHE_TTL = 604800; // 7 days in seconds
 
 const corsHeaders = {
