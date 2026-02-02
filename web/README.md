@@ -37,7 +37,7 @@ cd ..
 cargo build -p pico-cover-wasm --target wasm32-unknown-unknown --release
 wasm-bindgen target/wasm32-unknown-unknown/release/pico_cover_wasm.wasm \
   --out-dir web/pkg \
-  --target bundler
+  --target web
 ```
 
 ## Browser Compatibility

@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
+import type * as PicoWasm from '../pkg/pico_cover_wasm.js'
 import { Button, Card, CardBody, CardHeader, Progress, Divider } from '@heroui/react'
 import './App.css'
 import logo from '../../assets/github-banner.png'
 
 // WASM types
-type WasmModule = {
-  process_cover_image: (imageData: Uint8Array, width: number, height: number) => Uint8Array
-  download_cover: (gameId: string) => Promise<Uint8Array>
-  extract_game_code: (fileBytes: Uint8Array) => string
-}
+type WasmModule = typeof PicoWasm
 
 type RomFile = {
   name: string
@@ -46,31 +43,12 @@ function App() {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`])
   }
 
-  // Wait for WASM to fully initialize
-  const waitForWasmReady = async (wasmModule: any) => {
-    return new Promise<void>((resolve) => {
-      // Check if __wbindgen_free is available (indicates full initialization)
-      let attempts = 0
-      const checkReady = () => {
-        if (wasmModule.__wbindgen_free || attempts > 50) {
-          resolve()
-        } else {
-          attempts++
-          setTimeout(checkReady, 10)
-        }
-      }
-      checkReady()
-    })
-  }
-
   useEffect(() => {
     let mounted = true
     const loadWasm = async () => {
       try {
         const wasmModule = await import('../pkg/pico_cover_wasm.js')
-        
-        // Wait for WASM to fully initialize
-        await waitForWasmReady(wasmModule)
+        await wasmModule.default()
         
         if (mounted) {
           setWasm(wasmModule)
@@ -80,7 +58,7 @@ function App() {
       } catch (error) {
         console.error('Failed to load WASM:', error)
         if (mounted) {
-          addLog('Failed to load WASM module', 'error')
+          addLog(`Failed to load WASM module: ${error}`, 'error')
           setLoading(false)
         }
       }

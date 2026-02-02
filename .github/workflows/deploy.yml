@@ -33,12 +33,8 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Build WASM
-        working-directory: ./crates/wasm
-        run: wasm-pack build --target web --out-dir ../../web/pkg
+      - name: Install wasm-bindgen
+        run: cargo install wasm-bindgen-cli --version 0.2.108
 
       - name: Setup Node
         uses: actions/setup-node@v4

@@ -16,6 +16,9 @@ export function download_cover(game_code) {
  * @returns {string}
  */
 export function extract_game_code(file_bytes) {
+    if (!wasm || !wasm.__wbindgen_free) {
+        throw new Error('WASM module not fully initialized');
+    }
     let deferred3_0;
     let deferred3_1;
     try {
@@ -48,6 +51,9 @@ export function init() {
  * @returns {Uint8Array}
  */
 export function process_cover_image(image_data, width, height) {
+    if (!wasm || !wasm.__wbindgen_free) {
+        throw new Error('WASM module not fully initialized');
+    }
     const ptr0 = passArray8ToWasm0(image_data, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.process_cover_image(ptr0, len0, width, height);
