@@ -6,13 +6,22 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), wasm(), topLevelAwait(), tailwindcss()],
+  plugins: [
+    react(), 
+    wasm(), 
+    topLevelAwait(), 
+    tailwindcss()
+  ],
   base: '/PicoCover/',
   build: {
     outDir: 'dist',
     target: 'esnext',
+    assetsInlineLimit: 0, // Don't inline WASM files
   },
   worker: {
     format: 'es',
   },
+  optimizeDeps: {
+    exclude: ['pico_cover_wasm']
+  }
 })
