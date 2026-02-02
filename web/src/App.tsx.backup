@@ -37,35 +37,38 @@ function App() {
   const [status, setStatus] = useState<ProcessingStatus>({ total: 0, processed: 0, saved: 0, skipped: 0, errors: 0 })
   const [dimensions] = useState({ width: 128, height: 96 })
   const [logs, setLogs] = useState<string[]>([])
-  const [showLogs, setShowLogs] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved ? JSON.parse(saved) : false
+  })
+
   useEffect(() => {
-    document.documentElement.classList.add('dark')
-  }, [])
+    localStorage.setItem('darkMode', JSON.stringify(darkMode))
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
 
   const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`])
   }
 
   useEffect(() => {
-    let mounted = true
     const loadWasm = async () => {
       try {
         const wasmModule = await import('../pkg/pico_cover_wasm.js')
-        if (mounted) {
-          setWasm(wasmModule)
-          setLoading(false)
-          addLog('WASM module loaded successfully', 'info')
-        }
+        setWasm(wasmModule)
+        setLoading(false)
+        addLog('WASM module loaded successfully', 'success')
       } catch (error) {
         console.error('Failed to load WASM:', error)
-        if (mounted) {
-          addLog('Failed to load WASM module', 'error')
-          setLoading(false)
-        }
+        addLog('Failed to load WASM module', 'error')
+        setLoading(false)
       }
     }
     loadWasm()
-    return () => { mounted = false }
   }, [])
 
   const selectDirectory = async () => {
@@ -250,18 +253,17 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Log Viewer Toggle */}
-        {logs.length > 0 && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <Button
-              onClick={() => setShowLogs(!showLogs)}
-              className="bg-gray-800 hover:bg-gray-700 text-white font-semibold shadow-lg"
-              startContent={<span>📋</span>}
-            >
-              {showLogs ? 'Hide' : 'Show'} Logs ({logs.length})
-            </Button>
-          </div>
-        )}
+        {/* Dark Mode Toggle */}
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            isIconOnly
+            variant="flat"
+            onClick={() => setDarkMode(!darkMode)}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </Button>
+        </div>
 
         {/* Header */}
         <div className="text-center mb-8">
@@ -396,33 +398,31 @@ function App() {
                   </p>
                 </div>
 
-                <Card className="bg-blue-50 dark:bg-blue-950/30 border-0 dark:border dark:border-blue-900/50">
+                <Card className="bg-blue-50">
                   <CardBody className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{romFiles.length}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Total ROMs</p>
+                      <p className="text-2xl font-bold text-blue-600">{romFiles.length}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Total ROMs</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">To Process</p>
+                      <p className="text-2xl font-bold text-green-600">0</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">To Process</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">0</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Skipped</p>
+                      <p className="text-2xl font-bold text-gray-400">0</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Skipped</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">0</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Errors</p>
+                      <p className="text-2xl font-bold text-gray-400">0</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Errors</p>
                     </div>
                   </CardBody>
                 </Card>
 
                 <div className="flex gap-3 justify-center">
                   <Button 
-                    size="lg"
                     color="default"
                     variant="bordered"
-                    className="px-8"
                     onClick={() => {
                       setCurrentStep('select')
                       setRomFiles([])
@@ -463,27 +463,27 @@ function App() {
                 />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700">
+                  <Card className="bg-gray-50 dark:bg-gray-800">
                     <CardBody className="text-center py-3">
-                      <p className="text-xl font-bold text-gray-700 dark:text-gray-300">{status.processed}</p>
+                      <p className="text-xl font-bold text-gray-700">{status.processed}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Processed</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50">
+                  <Card className="bg-green-50">
                     <CardBody className="text-center py-3">
-                      <p className="text-xl font-bold text-green-600 dark:text-green-400">{status.saved}</p>
+                      <p className="text-xl font-bold text-green-600">{status.saved}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Saved</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50">
+                  <Card className="bg-yellow-50">
                     <CardBody className="text-center py-3">
-                      <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{status.skipped}</p>
+                      <p className="text-xl font-bold text-yellow-600">{status.skipped}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Skipped</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50">
+                  <Card className="bg-red-50">
                     <CardBody className="text-center py-3">
-                      <p className="text-xl font-bold text-red-600 dark:text-red-400">{status.errors}</p>
+                      <p className="text-xl font-bold text-red-600">{status.errors}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Errors</p>
                     </CardBody>
                   </Card>
@@ -519,27 +519,27 @@ function App() {
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
-                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700">
+                  <Card className="bg-gray-50 dark:bg-gray-800">
                     <CardBody className="text-center py-4">
-                      <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">{status.total}</p>
+                      <p className="text-3xl font-bold text-gray-700">{status.total}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50">
+                  <Card className="bg-green-50">
                     <CardBody className="text-center py-4">
-                      <p className="text-3xl font-bold text-green-600 dark:text-green-400">{status.saved}</p>
+                      <p className="text-3xl font-bold text-green-600">{status.saved}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Saved</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50">
+                  <Card className="bg-yellow-50">
                     <CardBody className="text-center py-4">
-                      <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{status.skipped}</p>
+                      <p className="text-3xl font-bold text-yellow-600">{status.skipped}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Skipped</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50">
+                  <Card className="bg-red-50">
                     <CardBody className="text-center py-4">
-                      <p className="text-3xl font-bold text-red-600 dark:text-red-400">{status.errors}</p>
+                      <p className="text-3xl font-bold text-red-600">{status.errors}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Errors</p>
                     </CardBody>
                   </Card>
@@ -586,41 +586,6 @@ function App() {
             </a>
           </p>
         </div>
-
-        {/* Floating Log Panel */}
-        {showLogs && (
-          <div className="fixed inset-x-4 bottom-20 max-w-4xl mx-auto z-40">
-            <Card className="bg-gray-900 border border-gray-700 shadow-2xl">
-              <CardHeader className="border-b border-gray-700 flex justify-between items-center">
-                <p className="text-sm font-mono text-gray-300">📋 Activity Log</p>
-                <Button
-                  size="sm"
-                  isIconOnly
-                  variant="light"
-                  onClick={() => setShowLogs(false)}
-                  className="text-gray-400 hover:text-gray-200"
-                >
-                  ✕
-                </Button>
-              </CardHeader>
-              <CardBody className="max-h-64 overflow-y-auto">
-                {logs.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">No activity yet</p>
-                ) : (
-                  logs.map((log, idx) => (
-                    <p key={idx} className={`text-xs font-mono mb-1 ${
-                      log.includes('SUCCESS') ? 'text-green-400' : 
-                      log.includes('ERROR') ? 'text-red-400' : 
-                      'text-gray-400'
-                    }`}>
-                      {log}
-                    </p>
-                  ))
-                )}
-              </CardBody>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   )
