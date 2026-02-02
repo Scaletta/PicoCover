@@ -10,8 +10,8 @@ use std::fs;
 use anyhow::anyhow;
 use eframe::egui;
 
-use crate::processing::{ProcessStats, process_root};
-use crate::{Config, updater};
+use crate::processing::{process_root, ProcessStats};
+use crate::{updater, Config};
 
 #[derive(Clone)]
 pub struct DriveInfo {
@@ -197,11 +197,11 @@ impl eframe::App for GuiApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);
             ui.vertical_centered(|ui| {
-                if self.logo_texture.is_none()
-                    && let Some(image_data) = load_logo_image()
-                {
-                    self.logo_texture =
-                        Some(ctx.load_texture("logo", image_data, Default::default()));
+                if self.logo_texture.is_none() {
+                    if let Some(image_data) = load_logo_image() {
+                        self.logo_texture =
+                            Some(ctx.load_texture("logo", image_data, Default::default()));
+                    }
                 }
 
                 if let Some(texture) = &self.logo_texture {
@@ -223,24 +223,27 @@ impl eframe::App for GuiApp {
             ui.add_space(15.0);
 
             // Update notification banner
-            if let Some(new_version) = &self.update_available
-                && !self.show_update_dialog
-            {
-                ui.group(|ui| {
-                    ui.set_min_width(ui.available_width());
-                    ui.horizontal(|ui| {
-                        ui.colored_label(
-                            egui::Color32::from_rgb(100, 200, 100),
-                            format!("🎉 Update available: v{}", new_version),
-                        );
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if ui.button("Update Now").clicked() {
-                                self.show_update_dialog = true;
-                            }
+            if let Some(new_version) = &self.update_available {
+                if !self.show_update_dialog {
+                    ui.group(|ui| {
+                        ui.set_min_width(ui.available_width());
+                        ui.horizontal(|ui| {
+                            ui.colored_label(
+                                egui::Color32::from_rgb(100, 200, 100),
+                                format!("🎉 Update available: v{}", new_version),
+                            );
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui.button("Update Now").clicked() {
+                                        self.show_update_dialog = true;
+                                    }
+                                },
+                            );
                         });
                     });
-                });
-                ui.add_space(10.0);
+                    ui.add_space(10.0);
+                }
             }
 
             // Update dialog
@@ -346,11 +349,11 @@ impl eframe::App for GuiApp {
                 let button = egui::Button::new(egui::RichText::new(button_text).size(16.0))
                     .min_size(egui::vec2(200.0, 40.0));
 
-                if ui.add_enabled(start_enabled, button).clicked()
-                    && let Err(err) = self.start_processing()
-                {
-                    self.error = Some(err.to_string());
-                    self.running = false;
+                if ui.add_enabled(start_enabled, button).clicked() {
+                    if let Err(err) = self.start_processing() {
+                        self.error = Some(err.to_string());
+                        self.running = false;
+                    }
                 }
             });
 
@@ -569,7 +572,7 @@ impl UiConfig {
 }
 
 pub fn load_logo_image() -> Option<egui::ColorImage> {
-    let bytes = include_bytes!("../assets/icon.png");
+    let bytes = include_bytes!("../../../assets/icon.png");
     let image = image::load_from_memory(bytes).ok()?.into_rgba8();
     let (width, height) = image.dimensions();
     let pixels: Vec<egui::Color32> = image

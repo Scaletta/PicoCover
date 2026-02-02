@@ -63,10 +63,43 @@ Download the latest release for your platform from the [Releases](https://github
 ```bash
 git clone https://github.com/Scaletta/PicoCover.git
 cd PicoCover
-cargo build --release
+cargo build -p pico-cover --release
 ```
 
 The binary will be in `target/release/pico_cover` (or `pico_cover.exe` on Windows).
+
+**Build the WASM module (for the web UI):**
+```bash
+rustup target add wasm32-unknown-unknown
+cargo build -p pico-cover-wasm --target wasm32-unknown-unknown --release
+wasm-bindgen target/wasm32-unknown-unknown/release/pico_cover_wasm.wasm \
+  --out-dir web/pkg \
+  --target bundler
+```
+
+**Build all workspace crates:**
+```bash
+cargo build --workspace --release
+```
+
+**Build per platform (native GUI app):**
+```bash
+# Windows (x64)
+rustup target add x86_64-pc-windows-msvc
+cargo build -p pico-cover --release --target x86_64-pc-windows-msvc
+
+# macOS (Intel)
+rustup target add x86_64-apple-darwin
+cargo build -p pico-cover --release --target x86_64-apple-darwin
+
+# macOS (Apple Silicon)
+rustup target add aarch64-apple-darwin
+cargo build -p pico-cover --release --target aarch64-apple-darwin
+
+# Linux (x64 GNU)
+rustup target add x86_64-unknown-linux-gnu
+cargo build -p pico-cover --release --target x86_64-unknown-linux-gnu
+```
 
 **Build native packages:**
 ```bash
@@ -80,6 +113,14 @@ cargo bundle --release --target aarch64-apple-darwin    # Apple Silicon
 # Linux .deb package
 cargo bundle --release --target x86_64-unknown-linux-gnu
 ```
+
+## 🧱 Project Structure
+
+- [crates/core](crates/core) – Pure Rust core (game code parsing + image processing)
+- [crates/native-gui](crates/native-gui) – Desktop GUI app (eframe/egui)
+- [crates/wasm](crates/wasm) – WASM bindings for the web UI
+- [web](web) – React + Vite frontend for Github pages.
+- [worker](worker) – Cloudflare Worker proxy + caching
 
 ## 🎯 Usage
 

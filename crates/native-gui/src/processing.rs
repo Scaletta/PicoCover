@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
 use color_quant::NeuQuant;
-use image::imageops::{FilterType, replace, resize};
+use image::imageops::{replace, resize, FilterType};
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rayon::prelude::*;
 use reqwest::blocking::Client;
