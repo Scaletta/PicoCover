@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Card, CardBody, CardHeader, Progress, Chip, Divider } from '@heroui/react'
+import { Button, Card, CardBody, CardHeader, Progress, Divider } from '@heroui/react'
 import './App.css'
 
 // WASM types
@@ -30,7 +30,6 @@ function App() {
   const [wasm, setWasm] = useState<WasmModule | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentStep, setCurrentStep] = useState<WizardStep>('welcome')
-  const [scanning, setScanning] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [rootDir, setRootDir] = useState<FileSystemDirectoryHandle | null>(null)
   const [romFiles, setRomFiles] = useState<RomFile[]>([])
@@ -100,7 +99,6 @@ function App() {
   }
 
   const scanForRoms = async (dirHandle: FileSystemDirectoryHandle) => {
-    setScanning(true)
     setRomFiles([])
     addLog('Scanning for NDS ROM files...', 'info')
 
@@ -135,7 +133,6 @@ function App() {
 
     await scanDir(dirHandle)
     setRomFiles(roms)
-    setScanning(false)
     setCurrentStep('process')
     addLog(`Found ${roms.length} NDS ROM files`, 'success')
   }
