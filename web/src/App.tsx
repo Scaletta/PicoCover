@@ -46,11 +46,32 @@ function App() {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`])
   }
 
+  // Wait for WASM to fully initialize
+  const waitForWasmReady = async (wasmModule: any) => {
+    return new Promise<void>((resolve) => {
+      // Check if __wbindgen_free is available (indicates full initialization)
+      let attempts = 0
+      const checkReady = () => {
+        if (wasmModule.__wbindgen_free || attempts > 50) {
+          resolve()
+        } else {
+          attempts++
+          setTimeout(checkReady, 10)
+        }
+      }
+      checkReady()
+    })
+  }
+
   useEffect(() => {
     let mounted = true
     const loadWasm = async () => {
       try {
         const wasmModule = await import('../pkg/pico_cover_wasm.js')
+        
+        // Wait for WASM to fully initialize
+        await waitForWasmReady(wasmModule)
+        
         if (mounted) {
           setWasm(wasmModule)
           setLoading(false)
@@ -100,6 +121,11 @@ function App() {
   }
 
   const scanForRoms = async (dirHandle: FileSystemDirectoryHandle) => {
+    if (!wasm) {
+      addLog('WASM module not loaded', 'error')
+      return
+    }
+    
     setRomFiles([])
     addLog('Scanning for NDS ROM files...', 'info')
 
@@ -114,7 +140,19 @@ function App() {
             const file = await (entry as FileSystemFileHandle).getFile()
             const headerBytes = await file.slice(0, 16).arrayBuffer()
             const fileBytes = new Uint8Array(headerBytes)
-            const id = wasm?.extract_game_code(fileBytes) || ''
+            
+            // Call WASM and handle both success and error cases
+            let id = ''
+            if (wasm) {
+              try {
+                const result = wasm.extract_game_code(fileBytes)
+                id = result || ''
+              } catch (wasmError) {
+                console.error(`WASM error for ${entry.name}:`, wasmError)
+                addLog(`Failed to read ${entry.name}: ${wasmError}`, 'error')
+                continue
+              }
+            }
             
             roms.push({
               name: entry.name,
