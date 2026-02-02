@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button, Card, CardBody, CardHeader, Progress, Divider } from '@heroui/react'
 import './App.css'
+import logo from '../../assets/github-banner.png'
 
 // WASM types
 type WasmModule = {
@@ -217,6 +218,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-indigo-950 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardBody className="text-center py-8">
+            <img src={logo} alt="PicoCover Logo" className="mx-auto mb-1" />
             <div className="text-4xl mb-4">⏳</div>
             <h2 className="text-xl font-semibold dark:text-white">Loading PicoCover...</h2>
             <p className="text-gray-600 dark:text-gray-400 mt-2">Initializing WASM module</p>
@@ -231,6 +233,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-red-950 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardBody className="text-center py-8">
+            <img src={logo} alt="PicoCover Logo" className="mx-auto mb-1" />
             <div className="text-4xl mb-4">❌</div>
             <h2 className="text-xl font-semibold text-red-600">Failed to Load</h2>
             <p className="text-gray-600 dark:text-gray-300 mt-2">WASM module could not be initialized</p>
@@ -245,7 +248,7 @@ function App() {
   const progressPercentage = status.total > 0 ? (status.processed / status.total) * 100 : 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 p-4 md:p-2">
       <div className="max-w-4xl mx-auto">
         {/* Log Viewer Toggle */}
         {logs.length > 0 && (
@@ -262,9 +265,7 @@ function App() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 mb-3">
-            PicoCover
-          </h1>
+          <img src={logo} alt="PicoCover Logo" className="mx-auto mb-1" />
           <p className="text-gray-600 dark:text-gray-300 text-lg">Nintendo DS Cover Art Downloader</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">for Pico Launcher</p>
         </div>
@@ -302,17 +303,15 @@ function App() {
           </div>
           <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-4 max-w-2xl mx-auto overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
-              style={{ 
-                width: `${(['welcome', 'select', 'scan', 'process', 'complete'].indexOf(currentStep) + 1) * 20}%` 
-              }}
+              className="h-full transition-all duration-500 ease-out"
+              style={{ backgroundColor: '#D2025E', width: `${(['welcome', 'select', 'scan', 'process', 'complete'].indexOf(currentStep) + 1) * 20}%` }}
             />
           </div>
         </div>
 
         {/* Content Card */}
-        <Card className="shadow-xl">
-          <CardBody className="p-6 md:p-8">
+        <Card className="shadow-2xl backdrop-blur-sm border border-white/10 dark:border-gray-700/50">
+          <CardBody className="p-6 md:p-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
             {/* Welcome Step */}
             {currentStep === 'welcome' && (
               <div className="text-center space-y-6">
@@ -454,31 +453,33 @@ function App() {
                 <Progress
                   size="lg"
                   value={progressPercentage}
-                  color="success"
                   showValueLabel
                   className="max-w-full"
+                  classNames={{
+                    indicator: "bg-[#D2025E]"
+                  }}
                 />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700">
+                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700 hover:shadow-lg transition-shadow">
                     <CardBody className="text-center py-3">
                       <p className="text-xl font-bold text-gray-700 dark:text-gray-300">{status.processed}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Processed</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50">
+                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50 hover:shadow-lg transition-shadow hover:shadow-green-500/20">
                     <CardBody className="text-center py-3">
                       <p className="text-xl font-bold text-green-600 dark:text-green-400">{status.saved}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Saved</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50">
+                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50 hover:shadow-lg transition-shadow hover:shadow-yellow-500/20">
                     <CardBody className="text-center py-3">
                       <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{status.skipped}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Skipped</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50">
+                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50 hover:shadow-lg transition-shadow hover:shadow-red-500/20">
                     <CardBody className="text-center py-3">
                       <p className="text-xl font-bold text-red-600 dark:text-red-400">{status.errors}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Errors</p>
@@ -516,25 +517,25 @@ function App() {
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
-                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700">
+                  <Card className="bg-gray-50 dark:bg-gray-800/50 border-0 dark:border dark:border-gray-700 hover:shadow-lg transition-shadow">
                     <CardBody className="text-center py-4">
                       <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">{status.total}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50">
+                  <Card className="bg-green-50 dark:bg-green-950/30 border-0 dark:border dark:border-green-900/50 hover:shadow-lg transition-shadow hover:shadow-green-500/20">
                     <CardBody className="text-center py-4">
                       <p className="text-3xl font-bold text-green-600 dark:text-green-400">{status.saved}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Saved</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50">
+                  <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-0 dark:border dark:border-yellow-900/50 hover:shadow-lg transition-shadow hover:shadow-yellow-500/20">
                     <CardBody className="text-center py-4">
                       <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{status.skipped}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Skipped</p>
                     </CardBody>
                   </Card>
-                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50">
+                  <Card className="bg-red-50 dark:bg-red-950/30 border-0 dark:border dark:border-red-900/50 hover:shadow-lg transition-shadow hover:shadow-red-500/20">
                     <CardBody className="text-center py-4">
                       <p className="text-3xl font-bold text-red-600 dark:text-red-400">{status.errors}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Errors</p>

@@ -39,6 +39,36 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Subtle animated background glow */
+#root::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 50%, rgba(210, 2, 94, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(88, 86, 214, 0.05) 0%, transparent 50%);
+  animation: subtleFloat 20s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes subtleFloat {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(10px, -10px); }
+  50% { transform: translate(-5px, 10px); }
+  75% { transform: translate(-15px, -5px); }
+}
+
+/* Glow effect for active elements */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(210, 2, 94, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(210, 2, 94, 0); }
 }
 
 h1 {
