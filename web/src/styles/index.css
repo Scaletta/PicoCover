@@ -21,11 +21,12 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #D2025E;
   text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
+  color: #9c0549;
 }
 
 body {
@@ -51,7 +52,7 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 20% 50%, rgba(210, 2, 94, 0.05) 0%, transparent 50%),
+  background: radial-gradient(circle at 20% 50%, rgba(210, 2, 96, 0.5) 0%, transparent 50%),
               radial-gradient(circle at 80% 80%, rgba(88, 86, 214, 0.05) 0%, transparent 50%);
   animation: subtleFloat 20s ease-in-out infinite;
   z-index: -1;

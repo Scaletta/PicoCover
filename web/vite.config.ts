@@ -12,6 +12,10 @@ export default defineConfig({
     topLevelAwait(), 
     tailwindcss()
   ],
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? 'dev'),
+    __GIT_COMMIT__: JSON.stringify(process.env.GITHUB_SHA?.slice(0, 7) ?? 'dev')
+  },
   base: '/PicoCover/',
   build: {
     outDir: 'dist',

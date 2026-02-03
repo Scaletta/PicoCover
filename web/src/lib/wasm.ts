@@ -1,21 +1,17 @@
-import * as wasmModule from '../pkg/pico_cover_wasm.js'
+import * as wasmModule from '../../pkg/pico_cover_wasm.js'
 
-// WASM types
 export type WasmModule = typeof wasmModule
 
-// Game Code type
 export interface GameCode {
   code: string
   region: string
 }
 
-// Cover Download result
 export interface CoverResult {
   gameCode: string
   coverData: Uint8Array
 }
 
-// Image Processing result
 export interface ImageResult {
   bmpData: Uint8Array
   width: number
