@@ -116,4 +116,37 @@ describe('PicoCover Proxy Worker', () => {
 		await waitOnExecutionContext(ctx2);
 		expect(response2.headers.get('X-Cache')).toBe('HIT');
 	});
+
+	it('returns stats from the analytics KV', async () => {
+		await env.ANALYTICS.put('stats:downloads:total', '12');
+		await env.ANALYTICS.put('stats:users:total', '3');
+
+		const request = new IncomingRequest('http://example.com/stats');
+		const ctx = createExecutionContext();
+		const response = await worker.fetch(request, env, ctx);
+		await waitOnExecutionContext(ctx);
+		expect(response.status).toBe(200);
+		const body = JSON.parse(await response.text());
+		expect(body.downloadsTotal).toBe(12);
+		expect(body.uniqueUsers).toBe(3);
+	});
+
+	it('protects stats endpoint when STATS_TOKEN is set', async () => {
+		(env as unknown as { STATS_TOKEN?: string }).STATS_TOKEN = 'secret-token';
+		try {
+			const request = new IncomingRequest('http://example.com/stats');
+			const ctx = createExecutionContext();
+			const response = await worker.fetch(request, env, ctx);
+			await waitOnExecutionContext(ctx);
+			expect(response.status).toBe(401);
+		} finally {
+			delete (env as unknown as { STATS_TOKEN?: string }).STATS_TOKEN;
+		}
+
+		const requestWithToken = new IncomingRequest('http://example.com/stats?token=secret-token');
+		const ctx2 = createExecutionContext();
+		const response2 = await worker.fetch(requestWithToken, env, ctx2);
+		await waitOnExecutionContext(ctx2);
+		expect(response2.status).toBe(200);
+	});
 });

@@ -15,7 +15,8 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#kv-namespaces
 	 */
 	"kv_namespaces": [
-		{ "binding": "IMAGE_CACHE", "id": "bbd75006df61453f9348c5ea729cafb6" }
+		{ "binding": "IMAGE_CACHE", "id": "bbd75006df61453f9348c5ea729cafb6" },
+		{ "binding": "ANALYTICS", "id": "e22a11dbdbcc471b925ee6ab459a68dc" }
 	],
 	/**
 	 * Smart Placement
@@ -34,7 +35,7 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
+	//	"vars": { "STATS_TOKEN": "" }
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/

@@ -8,7 +8,7 @@
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.81%2B-orange.svg)](https://www.rust-lang.org/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/Scaletta/PicoCover/releases)
+[![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/Scaletta/PicoCover/releases)
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/scaletta/PicoCover)
 ![GitHub downloads](https://img.shields.io/github/downloads/scaletta/PicoCover/total)
@@ -32,6 +32,11 @@
 - 🌍 **Multi-region support** – Tries EN, US, JA, EU until a cover is found
 - 🚀 **Fast processing** – Parallel downloads with CPU-core adaptive threading
 - 📦 **Native packages** – DMG for macOS, DEB for Linux, EXE for Windows
+- 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required, works in any modern browser
+  - Automatic ROM scanning
+  - Real-time cover downloading and conversion
+  - Works with File System Access API (Chrome, Edge, Opera)
+  - Uses a proxy to fetch and cache GameTDB images for faster, more reliable downloads
 
 ## 📋 Requirements
 
@@ -39,9 +44,24 @@
 - **Network access** to GameTDB art server
 - **Write permissions** to target drive
 
-## 🚀 Installation
+## 🚀 Usage
 
-### Option 1: Download Pre-built Package (Recommended)
+### 🌐 Option 1: Use Online (No Installation!)
+
+**Access PicoCover directly in your browser:**
+
+👉 **[Launch PicoCover Web UI](https://scaletta.github.io/PicoCover/)**
+
+**Requirements:**
+- Chrome 86+, Edge 86+, or Opera 72+
+- Your ROM folder accessible via File System Access API
+- Internet connection
+
+This is the **fastest and easiest way** to get started!
+
+---
+
+### Option 2: Download Pre-built Desktop Package
 Download the latest release for your platform from the [Releases](https://github.com/Scaletta/PicoCover/releases) page:
 
 - **Windows**: `pico_cover-windows-x64.exe` – Standalone executable
@@ -59,7 +79,7 @@ Download the latest release for your platform from the [Releases](https://github
   4. If you see "damaged" error: Go to **System Settings** → **Privacy & Security** → Scroll down and click **Open Anyway**
 - **Linux**: `sudo dpkg -i pico_cover-linux-x64.deb` or run the standalone binary
 
-### Option 2: Build from Source
+### Option 3: Build from Source
 ```bash
 git clone https://github.com/Scaletta/PicoCover.git
 cd PicoCover
@@ -102,6 +122,8 @@ cargo build -p pico-cover --release --target x86_64-unknown-linux-gnu
 ```
 
 **Build native packages:**
+
+*Windows is binary only*
 ```bash
 # Install cargo-bundle
 cargo install cargo-bundle
