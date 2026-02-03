@@ -19,25 +19,25 @@ export default function WelcomeStep({ isSupported, onStart }: WelcomeStepProps) 
         </p>
       </div>
 
-      {!isSupported ? (
-        <Card className="bg-red-50 border-2 border-red-200">
+      {!isSupported && (
+        <Card className="bg-yellow-50 border-2 border-yellow-200">
           <CardBody className="text-center py-4">
-            <p className="text-red-700 font-semibold mb-2">⚠️ Browser Not Supported</p>
-            <p className="text-red-600 text-sm">
-              Please use Chrome 86+, Edge 86+, or Opera 72+
+            <p className="text-yellow-800 font-semibold mb-2">⚠️ Limited Browser Support</p>
+            <p className="text-yellow-700 text-sm">
+              Your browser doesn't support folder access. You can still continue and export a ZIP.
             </p>
           </CardBody>
         </Card>
-      ) : (
-        <Button 
-          size="lg"
-          color="primary"
-          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-8"
-          onClick={onStart}
-        >
-          Get Started →
-        </Button>
       )}
+
+      <Button 
+        size="lg"
+        color="primary"
+        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-8"
+        onClick={onStart}
+      >
+        Get Started →
+      </Button>
     </div>
   )
 }

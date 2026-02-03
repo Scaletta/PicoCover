@@ -2,19 +2,24 @@ import { Button, Card, CardBody } from '@heroui/react'
 
 type ProcessReadyStepProps = {
   romCount: number
+  romFiles: Array<{ name: string; path: string }>
   rootDirName?: string
   onBack: () => void
   onStart: () => void
 }
 
-export default function ProcessReadyStep({ romCount, rootDirName, onBack, onStart }: ProcessReadyStepProps) {
+export default function ProcessReadyStep({ romCount, romFiles, rootDirName, onBack, onStart }: ProcessReadyStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
         <div className="text-6xl mb-4">🎮</div>
         <h2 className="text-2xl font-bold mb-2">Ready to Process</h2>
         <p className="text-gray-600 dark:text-gray-300 mb-4">
-          Found <strong className="text-blue-600">{romCount}</strong> ROM files in <strong>{rootDirName}</strong>
+          Found <strong className="text-blue-600">{romCount}</strong> ROM files{rootDirName ? (
+            <> in <strong>{rootDirName}</strong></>
+          ) : (
+            <> in your selection</>
+          )}
         </p>
       </div>
 
@@ -38,6 +43,24 @@ export default function ProcessReadyStep({ romCount, rootDirName, onBack, onStar
           </div>
         </CardBody>
       </Card>
+
+      {romFiles.length > 0 && (
+        <div className="rounded-lg border border-gray-200/60 dark:border-gray-700/60 bg-white/60 dark:bg-gray-900/40">
+          <div className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 border-b border-gray-200/60 dark:border-gray-700/60">
+            ROM Files
+          </div>
+          <div className="max-h-64 overflow-auto">
+            <ul className="divide-y divide-gray-200/60 dark:divide-gray-700/60">
+              {romFiles.map((rom, index) => (
+                <li key={`${rom.path}-${index}`} className="px-4 py-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-200 truncate">{rom.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{rom.path}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-3 justify-center">
         <Button 

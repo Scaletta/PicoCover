@@ -16,6 +16,7 @@
     "@heroui/react": "^2.8.8",
     "@tailwindcss/vite": "^4.1.18",
     "framer-motion": "^12.29.2",
+    "jszip": "^3.10.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

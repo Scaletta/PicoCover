@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type * as PicoWasm from '../../pkg/pico_cover_wasm.js'
 import { Button, Card, CardBody } from '@heroui/react'
+import JSZip from 'jszip'
 import '../styles/App.css'
 import logo from '../../../assets/github-banner.png'
 import WizardSteps from '../components/WizardSteps'
@@ -20,7 +21,9 @@ type RomFile = {
   name: string
   path: string
   id: string
-  handle: FileSystemFileHandle
+  handle?: FileSystemFileHandle
+  file?: File
+  key?: string
 }
 
 type ProcessingStatus = {
@@ -132,6 +135,72 @@ export default function App() {
     }
   }
 
+  const selectRomFiles = async (files: FileList | null) => {
+    if (!wasm) {
+      addLog('WASM module not loaded', 'error')
+      return
+    }
+
+    if (!files || files.length === 0) return
+
+    setRootDir(null)
+    setCurrentStep('select')
+    addLog('Reading selected ROM files...', 'info')
+
+    const roms: RomFile[] = []
+
+    for (const file of Array.from(files)) {
+      if (!file.name.toLowerCase().endsWith('.nds')) continue
+      try {
+        const headerBytes = await file.slice(0, 16).arrayBuffer()
+        const fileBytes = new Uint8Array(headerBytes)
+
+        let id = ''
+        try {
+          const result = wasm.extract_game_code(fileBytes)
+          id = result || ''
+        } catch (wasmError) {
+          console.error(`WASM error for ${file.name}:`, wasmError)
+          addLog(`Failed to read ${file.name}: ${wasmError}`, 'error')
+          continue
+        }
+
+        roms.push({
+          name: file.name,
+          path: file.name,
+          id,
+          file,
+          key: `${file.name}-${file.size}-${file.lastModified}`
+        })
+      } catch (error) {
+        addLog(`Failed to read ${file.name}: ${error}`, 'error')
+      }
+    }
+
+    setRomFiles(prev => {
+      const existing = new Set(prev.map(item => item.key || item.path))
+      const merged = [...prev]
+      for (const rom of roms) {
+        const key = rom.key || rom.path
+        if (!existing.has(key)) {
+          existing.add(key)
+          merged.push(rom)
+        }
+      }
+      return merged
+    })
+    addLog(`Added ${roms.length} NDS ROM files`, 'success')
+  }
+
+  const proceedWithSelectedFiles = () => {
+    if (romFiles.length === 0) return
+    setCurrentStep('process')
+  }
+
+  const removeSelectedFile = (key: string) => {
+    setRomFiles(prev => prev.filter(item => (item.key || item.path) !== key))
+  }
+
   const scanForRoms = async (dirHandle: FileSystemDirectoryHandle) => {
     if (!wasm) {
       addLog('WASM module not loaded', 'error')
@@ -170,7 +239,8 @@ export default function App() {
               name: entry.name,
               path: path ? `${path}/${entry.name}` : entry.name,
               id: id,
-              handle: entry as FileSystemFileHandle
+              handle: entry as FileSystemFileHandle,
+              key: path ? `${path}/${entry.name}` : entry.name
             })
           } catch (error) {
             // Skip files that can't be read
@@ -189,39 +259,49 @@ export default function App() {
   }
 
   const processAllCovers = async () => {
-    if (!wasm || !rootDir || romFiles.length === 0) return
+    if (!wasm || romFiles.length === 0) return
 
     setProcessing(true)
     setStatus({ total: romFiles.length, processed: 0, saved: 0, skipped: 0, errors: 0 })
     addLog('Starting batch processing...', 'info')
 
-    // Get or create _pico/covers/nds directory
-    let picoDir: FileSystemDirectoryHandle
-    let coversDir: FileSystemDirectoryHandle
-    let ndsDir: FileSystemDirectoryHandle
+    const isFallbackMode = !rootDir
+    let zip: JSZip | null = null
+    let ndsDir: FileSystemDirectoryHandle | null = null
 
-    try {
-      picoDir = await rootDir.getDirectoryHandle('_pico', { create: true })
-      coversDir = await picoDir.getDirectoryHandle('covers', { create: true })
-      ndsDir = await coversDir.getDirectoryHandle('nds', { create: true })
-    } catch (error) {
-      addLog(`Error creating directories: ${error}`, 'error')
-      setProcessing(false)
-      return
+    if (isFallbackMode) {
+      zip = new JSZip()
+      addLog('Preparing ZIP export (no folder access)', 'info')
+    } else {
+      // Get or create _pico/covers/nds directory
+      let picoDir: FileSystemDirectoryHandle
+      let coversDir: FileSystemDirectoryHandle
+
+      try {
+        picoDir = await rootDir.getDirectoryHandle('_pico', { create: true })
+        coversDir = await picoDir.getDirectoryHandle('covers', { create: true })
+        ndsDir = await coversDir.getDirectoryHandle('nds', { create: true })
+      } catch (error) {
+        addLog(`Error creating directories: ${error}`, 'error')
+        setProcessing(false)
+        return
+      }
     }
 
     for (const rom of romFiles) {
       const bmpFilename = rom.name.replace(/\.nds$/i, '.bmp')
 
       try {
-        // Check if BMP already exists
-        try {
-          await ndsDir.getFileHandle(bmpFilename)
-          addLog(`Skipped: ${rom.name} (already exists)`, 'info')
-          setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
-          continue
-        } catch {
-          // File doesn't exist, continue processing
+        if (!isFallbackMode && ndsDir) {
+          // Check if BMP already exists
+          try {
+            await ndsDir.getFileHandle(bmpFilename)
+            addLog(`Skipped: ${rom.name} (already exists)`, 'info')
+            setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
+            continue
+          } catch {
+            // File doesn't exist, continue processing
+          }
         }
 
         // Download cover using WASM
@@ -244,18 +324,36 @@ export default function App() {
         // Process with WASM
         const bmpData = wasm.process_cover_image(imageData, dimensions.width, dimensions.height)
 
-        // Save BMP file
-        const fileHandle = await ndsDir.getFileHandle(bmpFilename, { create: true })
-        const writable = await fileHandle.createWritable()
-        await writable.write(new Uint8Array(bmpData))
-        await writable.close()
+        if (isFallbackMode && zip) {
+          zip.file(`_pico/covers/nds/${bmpFilename}`, new Uint8Array(bmpData))
+          addLog(`Added to ZIP: ${bmpFilename}`, 'success')
+        } else if (!isFallbackMode && ndsDir) {
+          // Save BMP file
+          const fileHandle = await ndsDir.getFileHandle(bmpFilename, { create: true })
+          const writable = await fileHandle.createWritable()
+          await writable.write(new Uint8Array(bmpData))
+          await writable.close()
 
-        addLog(`Saved: ${bmpFilename}`, 'success')
+          addLog(`Saved: ${bmpFilename}`, 'success')
+        }
+
         setStatus(prev => ({ ...prev, processed: prev.processed + 1, saved: prev.saved + 1 }))
       } catch (error) {
         addLog(`Error processing ${rom.name}: ${error}`, 'error')
         setStatus(prev => ({ ...prev, processed: prev.processed + 1, errors: prev.errors + 1 }))
       }
+    }
+
+    if (isFallbackMode && zip) {
+      addLog('Generating ZIP file...', 'info')
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(zipBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'pico_covers.zip'
+      link.click()
+      URL.revokeObjectURL(url)
+      addLog('ZIP download started', 'success')
     }
 
     setProcessing(false)
@@ -315,7 +413,7 @@ export default function App() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <img src={logo} width={600} alt="PicoCover Logo" className="mx-auto mb-1" />
+          <img src={logo} width={500} alt="PicoCover Logo" className="mx-auto mb-1" />
           <p className="text-gray-600 dark:text-gray-300 text-lg">Nintendo DS Cover Art Downloader</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">for Pico Launcher</p>
         </div>
@@ -336,6 +434,17 @@ export default function App() {
               <SelectStep
                 isSupported={isSupported}
                 onSelectDirectory={selectDirectory}
+                onSelectFiles={selectRomFiles}
+                onContinue={proceedWithSelectedFiles}
+                onRemoveFile={removeSelectedFile}
+                selectedCount={romFiles.length}
+                selectedFiles={romFiles
+                  .filter(file => !!file.key)
+                  .map(file => ({
+                    key: file.key as string,
+                    name: file.name,
+                    path: file.path
+                  }))}
               />
             )}
 
@@ -346,6 +455,7 @@ export default function App() {
             {currentStep === 'process' && !processing && (
               <ProcessReadyStep
                 romCount={romFiles.length}
+                romFiles={romFiles.map(rom => ({ name: rom.name, path: rom.path }))}
                 rootDirName={rootDir?.name}
                 onBack={() => {
                   setCurrentStep('select')

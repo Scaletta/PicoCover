@@ -28,10 +28,11 @@
 
 ## ✨ Features
 
-- 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required, works in any modern browser
+- 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required
   - Automatic ROM scanning
   - Real-time cover downloading and conversion
   - Works with File System Access API (Chrome, Edge, Opera)
+  - Alternative method for non-supported modern browsers (Firefox, Brave)
   - Uses a proxy to fetch and cache GameTDB images for faster, more reliable downloads
 - 🖥️ **GUI Mode** – Intuitive interface with automatic drive detection and tabbed view
   - Collapsible game lists (skipped/failed) for quick review
