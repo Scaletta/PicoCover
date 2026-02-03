@@ -16,8 +16,8 @@
 ![GitHub downloads](https://img.shields.io/github/downloads/scaletta/PicoCover/total)
 ![GitHub release date](https://img.shields.io/github/release-date/scaletta/PicoCover)
 
-<img src="https://img.shields.io/badge/dynamic/json?url=https://picocover.retrosave.games/stats&amp;query=$.uniqueUsers&amp;label=Web Users&amp;suffix= total&amp;style=for-the-badge&amp;logo=github&amp;logoColor=white&amp;color=7c3aed" alt="Web Users">
-<img src="https://img.shields.io/badge/dynamic/json?url=https://picocover.retrosave.games/stats&amp;query=$.downloadsTotal&amp;label=Covers Downloaded&amp;style=for-the-badge&amp;logo=databricks&amp;logoColor=white&amp;color=10b981" alt="Covers Downloaded">
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpicocover.retrosave.games%2Fstats&query=%24.uniqueUsers&suffix=%20total&style=for-the-badge&logo=github&logoColor=white&label=Web%20Users&color=d2025e)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpicocover.retrosave.games%2Fstats&query=%24.downloadsTotal&suffix=%20total&style=for-the-badge&logo=databricks&logoColor=white&label=Covers%20Downloaded&color=10b981)
 
 *Cross-platform tool to fetch GameTDB cover art, convert to 8bpp BMP format, and organize for [Pico Launcher](https://github.com/LNH-team/pico-launcher) by [LNH-team](https://github.com/LNH-team)*
 
