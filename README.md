@@ -6,6 +6,8 @@
 
 **Automatically download and convert Nintendo DS cover art for Pico Launcher**
 
+**🌐 Primary experience: [PicoCover Web UI on GitHub Pages](https://scaletta.github.io/PicoCover/)**
+
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.81%2B-orange.svg)](https://www.rust-lang.org/)
 [![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/Scaletta/PicoCover/releases)
@@ -13,6 +15,9 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/scaletta/PicoCover)
 ![GitHub downloads](https://img.shields.io/github/downloads/scaletta/PicoCover/total)
 ![GitHub release date](https://img.shields.io/github/release-date/scaletta/PicoCover)
+
+<img src="https://img.shields.io/badge/dynamic/json?url=https://picocover.retrosave.games/stats&amp;query=$.uniqueUsers&amp;label=Web Users&amp;suffix= total&amp;style=for-the-badge&amp;logo=github&amp;logoColor=white&amp;color=7c3aed" alt="Web Users">
+<img src="https://img.shields.io/badge/dynamic/json?url=https://picocover.retrosave.games/stats&amp;query=$.downloadsTotal&amp;label=Covers Downloaded&amp;style=for-the-badge&amp;logo=databricks&amp;logoColor=white&amp;color=10b981" alt="Covers Downloaded">
 
 *Cross-platform tool to fetch GameTDB cover art, convert to 8bpp BMP format, and organize for [Pico Launcher](https://github.com/LNH-team/pico-launcher) by [LNH-team](https://github.com/LNH-team)*
 
@@ -23,6 +28,11 @@
 
 ## ✨ Features
 
+- 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required, works in any modern browser
+  - Automatic ROM scanning
+  - Real-time cover downloading and conversion
+  - Works with File System Access API (Chrome, Edge, Opera)
+  - Uses a proxy to fetch and cache GameTDB images for faster, more reliable downloads
 - 🖥️ **GUI Mode** – Intuitive interface with automatic drive detection and tabbed view
   - Collapsible game lists (skipped/failed) for quick review
   - Overwrite toggle
@@ -32,19 +42,19 @@
 - 🌍 **Multi-region support** – Tries EN, US, JA, EU until a cover is found
 - 🚀 **Fast processing** – Parallel downloads with CPU-core adaptive threading
 - 📦 **Native packages** – DMG for macOS, DEB for Linux, EXE for Windows
-- 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required, works in any modern browser
-  - Automatic ROM scanning
-  - Real-time cover downloading and conversion
-  - Works with File System Access API (Chrome, Edge, Opera)
-  - Uses a proxy to fetch and cache GameTDB images for faster, more reliable downloads
 
 ## 📋 Requirements
 
-- **Rust 1.81+** for building from source
-- **Network access** to GameTDB art server
-- **Write permissions** to target drive
+- **Web UI (GitHub Pages)**
+  - Chrome 86+, Edge 86+, or Opera 72+
+  - Your ROM folder accessible via File System Access API
+  - Internet connection
+- **Desktop/CLI/Build**
+  - Rust 1.81+ for building from source
+  - Network access to GameTDB art server
+  - Write permissions to target drive
 
-## 🚀 Usage
+## 🚀 Get Started
 
 ### 🌐 Option 1: Use Online (No Installation!)
 
