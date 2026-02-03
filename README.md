@@ -47,7 +47,8 @@
 ## 📋 Requirements
 
 - **Web UI (GitHub Pages)**
-  - Chrome 86+, Edge 86+, or Opera 72+
+  - Recommended (full folder access): Chrome 86+, Edge 86+, or Opera 72+
+  - Supported (ZIP export fallback): Firefox, Brave
   - Your ROM folder accessible via File System Access API
   - Internet connection
 - **Desktop/CLI/Build**
