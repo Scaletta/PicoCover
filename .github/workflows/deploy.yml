@@ -2,8 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main  # or master, depending on your default branch
+    branches: [ main, dev ]
     paths:
       - 'web/**'
       - 'crates/wasm/**'

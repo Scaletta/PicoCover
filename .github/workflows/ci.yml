@@ -5,9 +5,14 @@ permissions:
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
+    paths:
+      - 'web/**'
+      - 'crates/**'
+      - '.github/workflows/ci.yml'
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test:
