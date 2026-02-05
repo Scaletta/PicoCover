@@ -339,7 +339,7 @@ export default function App() {
     }
 
     for (const rom of filesToProcess) {
-      const bmpFilename = rom.name.replace(/\.(nds|gba)$/i, '.bmp')
+      const bmpFilename = rom.id ? `${rom.id}.bmp` : rom.name.replace(/\.(nds|gba)$/i, '.bmp')
       const targetDir = rom.type === 'nds' ? 'nds' : 'gba'
 
       try {
