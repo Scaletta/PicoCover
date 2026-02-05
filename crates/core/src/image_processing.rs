@@ -16,9 +16,19 @@ impl ImageProcessor {
     }
 
     /// Convert an image buffer to 8-bit indexed BMP format with optional padding
-    fn convert_to_8bpp_bmp(img: &DynamicImage, resize_width: u32, resize_height: u32, final_width: u32, final_height: u32) -> Result<Vec<u8>> {
+    fn convert_to_8bpp_bmp(
+        img: &DynamicImage,
+        resize_width: u32,
+        resize_height: u32,
+        final_width: u32,
+        final_height: u32,
+    ) -> Result<Vec<u8>> {
         // Resize image to 106×96
-        let resized = img.resize_exact(resize_width, resize_height, image::imageops::FilterType::Lanczos3);
+        let resized = img.resize_exact(
+            resize_width,
+            resize_height,
+            image::imageops::FilterType::Lanczos3,
+        );
         let rgba = resized.to_rgba8();
 
         // Quantize colors to 256 colors
@@ -36,7 +46,13 @@ impl ImageProcessor {
 
         // Add padding if final size differs from resized size
         let padded_data = if final_width > resize_width || final_height > resize_height {
-            Self::add_padding(&indexed_data, resize_width, resize_height, final_width, final_height)
+            Self::add_padding(
+                &indexed_data,
+                resize_width,
+                resize_height,
+                final_width,
+                final_height,
+            )
         } else {
             indexed_data
         };
@@ -46,7 +62,13 @@ impl ImageProcessor {
     }
 
     /// Add black padding to image (right and/or bottom)
-    fn add_padding(data: &[u8], orig_width: u32, orig_height: u32, final_width: u32, final_height: u32) -> Vec<u8> {
+    fn add_padding(
+        data: &[u8],
+        orig_width: u32,
+        orig_height: u32,
+        final_width: u32,
+        final_height: u32,
+    ) -> Vec<u8> {
         let mut padded = Vec::new();
         let orig_width = orig_width as usize;
         let orig_height = orig_height as usize;
