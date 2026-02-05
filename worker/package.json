@@ -1,6 +1,6 @@
 {
 	"name": "picocover_worker",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
