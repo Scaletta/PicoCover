@@ -61,7 +61,6 @@ body:
     attributes:
       label: Screenshots
       description: Paste screenshots here if applicable
-      render: shell
 
   - type: textarea
     id: logs
