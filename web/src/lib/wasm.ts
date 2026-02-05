@@ -42,7 +42,19 @@ export async function downloadCover(gameCode: string, platform: 'nds' | 'gba'): 
 }
 
 /**
- * Process cover image (resize + convert to BMP)
+ * Process cover image (resize + convert to BMP) - async version for better concurrency
+ */
+export async function processCoverImageAsync(
+  imageData: Uint8Array,
+  width: number = 128,
+  height: number = 96
+): Promise<Uint8Array> {
+  const wasm = await initWasm()
+  return (wasm as any).process_cover_image_async(imageData, width, height)
+}
+
+/**
+ * Process cover image (resize + convert to BMP) - sync version for backwards compatibility
  */
 export async function processCoverImage(
   imageData: Uint8Array,

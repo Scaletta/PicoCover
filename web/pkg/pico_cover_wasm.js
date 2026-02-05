@@ -99,7 +99,7 @@ export function init() {
 }
 
 /**
- * Process cover image: resize and convert to 8bpp BMP
+ * Process cover image: resize and convert to 8bpp BMP (sync version for backwards compatibility)
  * @param {Uint8Array} image_data
  * @param {number} width
  * @param {number} height
@@ -115,6 +115,29 @@ export function process_cover_image(image_data, width, height) {
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
+}
+
+/**
+ * Process cover image: resize and convert to 8bpp BMP (async version)
+ * @param {Uint8Array} image_data
+ * @param {number} width
+ * @param {number} height
+ * @returns {Promise<Uint8Array>}
+ */
+export function process_cover_image_async(image_data, width, height) {
+    const ptr0 = passArray8ToWasm0(image_data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.process_cover_image_async(ptr0, len0, width, height);
+    return ret;
+}
+
+/**
+ * Helper function to yield to event loop for better concurrency
+ * @returns {Promise<void>}
+ */
+export function yield_to_event_loop() {
+    const ret = wasm.yield_to_event_loop();
+    return ret;
 }
 
 function __wbg_get_imports() {
@@ -367,7 +390,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 38, function: Function { arguments: [Externref], shim_idx: 39, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 51, function: Function { arguments: [Externref], shim_idx: 52, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h6b42acf6049c0920, wasm_bindgen__convert__closures_____invoke__h50a34ab49655f4b1);
             return ret;
         },

@@ -338,7 +338,8 @@ export default function App() {
       }
     }
 
-    for (const rom of filesToProcess) {
+    const maxConcurrent = 4
+    const processRom = async (rom: RomFile) => {
       const bmpFilename = rom.id ? `${rom.id}.bmp` : rom.name.replace(/\.(nds|gba)$/i, '.bmp')
       const targetDir = rom.type === 'nds' ? 'nds' : 'gba'
 
@@ -349,7 +350,7 @@ export default function App() {
             await ndsDirHandle.getFileHandle(bmpFilename)
             addLog(`Skipped: ${rom.name} (already exists)`, 'info')
             setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
-            continue
+            return
           } catch {
             // File doesn't exist, continue processing
           }
@@ -359,7 +360,7 @@ export default function App() {
             await gbaDirHandle.getFileHandle(bmpFilename)
             addLog(`Skipped: ${rom.name} (already exists)`, 'info')
             setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
-            continue
+            return
           } catch {
             // File doesn't exist, continue processing
           }
@@ -373,17 +374,17 @@ export default function App() {
         } catch (error) {
           addLog(`Failed: ${rom.name} (no cover found)`, 'error')
           setStatus(prev => ({ ...prev, processed: prev.processed + 1, errors: prev.errors + 1 }))
-          continue
+          return
         }
 
         if (!imageData) {
           addLog(`Failed: ${rom.name} (no cover found)`, 'error')
           setStatus(prev => ({ ...prev, processed: prev.processed + 1, errors: prev.errors + 1 }))
-          continue
+          return
         }
 
         // Process with WASM
-        const bmpData = wasm.process_cover_image(imageData, dimensions.width, dimensions.height)
+        const bmpData = await (wasm as any).process_cover_image_async(imageData, dimensions.width, dimensions.height)
 
         if (isFallbackMode && zip) {
           zip.file(`_pico/covers/${targetDir}/${bmpFilename}`, new Uint8Array(bmpData))
@@ -412,6 +413,18 @@ export default function App() {
         setStatus(prev => ({ ...prev, processed: prev.processed + 1, errors: prev.errors + 1 }))
       }
     }
+
+    // Run with concurrency limit
+    await Promise.allSettled(
+      filesToProcess.map((rom, index) =>
+        new Promise<void>(resolve => {
+          const delay = (index % maxConcurrent) * 10
+          setTimeout(() => {
+            processRom(rom).finally(() => resolve())
+          }, delay)
+        })
+      )
+    )
 
     if (isFallbackMode && zip) {
       addLog('Generating ZIP file...', 'info')

@@ -25,9 +25,19 @@ export function extract_nds_game_code(file_bytes: Uint8Array): string;
 export function init(): void;
 
 /**
- * Process cover image: resize and convert to 8bpp BMP
+ * Process cover image: resize and convert to 8bpp BMP (sync version for backwards compatibility)
  */
 export function process_cover_image(image_data: Uint8Array, width: number, height: number): Uint8Array;
+
+/**
+ * Process cover image: resize and convert to 8bpp BMP (async version)
+ */
+export function process_cover_image_async(image_data: Uint8Array, width: number, height: number): Promise<Uint8Array>;
+
+/**
+ * Helper function to yield to event loop for better concurrency
+ */
+export function yield_to_event_loop(): Promise<void>;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -39,6 +49,8 @@ export interface InitOutput {
     readonly extract_nds_game_code: (a: number, b: number) => [number, number, number, number];
     readonly init: () => void;
     readonly process_cover_image: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+    readonly process_cover_image_async: (a: number, b: number, c: number, d: number) => any;
+    readonly yield_to_event_loop: () => any;
     readonly wasm_bindgen__closure__destroy__h6b42acf6049c0920: (a: number, b: number) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h52e09fbcd076dc54: (a: number, b: number, c: any, d: any) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h50a34ab49655f4b1: (a: number, b: number, c: any) => void;

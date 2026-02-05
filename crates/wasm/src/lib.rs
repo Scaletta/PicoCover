@@ -43,7 +43,21 @@ pub fn extract_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsVal
     extract_nds_game_code(file_bytes)
 }
 
-/// Process cover image: resize and convert to 8bpp BMP
+/// Process cover image: resize and convert to 8bpp BMP (async version)
+#[wasm_bindgen]
+pub async fn process_cover_image_async(
+    image_data: &[u8],
+    width: u32,
+    height: u32,
+) -> std::result::Result<Vec<u8>, JsValue> {
+    // Yield to event loop for concurrency
+    crate::yield_to_event_loop().await;
+
+    ImageProcessor::process_cover(image_data, width, height)
+        .map_err(|e| JsValue::from_str(&format!("Failed to process image: {}", e)))
+}
+
+/// Process cover image: resize and convert to 8bpp BMP (sync version for backwards compatibility)
 #[wasm_bindgen]
 pub fn process_cover_image(
     image_data: &[u8],
@@ -52,6 +66,14 @@ pub fn process_cover_image(
 ) -> std::result::Result<Vec<u8>, JsValue> {
     ImageProcessor::process_cover(image_data, width, height)
         .map_err(|e| JsValue::from_str(&format!("Failed to process image: {}", e)))
+}
+
+/// Helper function to yield to event loop for better concurrency
+#[wasm_bindgen]
+pub async fn yield_to_event_loop() {
+    use wasm_bindgen_futures::JsFuture;
+    let promise = js_sys::Promise::resolve(&JsValue::null());
+    let _ = JsFuture::from(promise).await;
 }
 
 /// Download cover from PicoCover proxy
