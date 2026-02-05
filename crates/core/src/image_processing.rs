@@ -6,18 +6,29 @@ use image::{DynamicImage, GenericImageView};
 pub struct ImageProcessor;
 
 impl ImageProcessor {
-    /// Process cover image: resize to target dimensions and convert to 8bpp BMP
-    pub fn process_cover(image_data: &[u8], width: u32, height: u32) -> Result<Vec<u8>> {
+    /// Process cover image: resize to 106×96 and add 22px right padding for 128×96 final size
+    pub fn process_cover(image_data: &[u8], _width: u32, _height: u32) -> Result<Vec<u8>> {
         let img = image::load_from_memory(image_data)
             .map_err(|e| Error::Image(format!("Failed to load image: {}", e)))?;
 
-        Self::convert_to_8bpp_bmp(&img, width, height)
+        // Always resize to 106×96 and add 22px padding to make 128×96
+        Self::convert_to_8bpp_bmp(&img, 106, 96, 128, 96)
     }
 
-    /// Convert an image buffer to 8-bit indexed BMP format
-    fn convert_to_8bpp_bmp(img: &DynamicImage, width: u32, height: u32) -> Result<Vec<u8>> {
-        // Resize image
-        let resized = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
+    /// Convert an image buffer to 8-bit indexed BMP format with optional padding
+    fn convert_to_8bpp_bmp(
+        img: &DynamicImage,
+        resize_width: u32,
+        resize_height: u32,
+        final_width: u32,
+        final_height: u32,
+    ) -> Result<Vec<u8>> {
+        // Resize image to 106×96
+        let resized = img.resize_exact(
+            resize_width,
+            resize_height,
+            image::imageops::FilterType::Lanczos3,
+        );
         let rgba = resized.to_rgba8();
 
         // Quantize colors to 256 colors
@@ -33,8 +44,50 @@ impl ImageProcessor {
             indexed_data.push(idx as u8);
         }
 
-        // Create BMP file
-        Self::create_8bpp_bmp(width, height, &indexed_data, &palette)
+        // Add padding if final size differs from resized size
+        let padded_data = if final_width > resize_width || final_height > resize_height {
+            Self::add_padding(
+                &indexed_data,
+                resize_width,
+                resize_height,
+                final_width,
+                final_height,
+            )
+        } else {
+            indexed_data
+        };
+
+        // Create BMP file with final dimensions
+        Self::create_8bpp_bmp(final_width, final_height, &padded_data, &palette)
+    }
+
+    /// Add black padding to image (right and/or bottom)
+    fn add_padding(
+        data: &[u8],
+        orig_width: u32,
+        orig_height: u32,
+        final_width: u32,
+        final_height: u32,
+    ) -> Vec<u8> {
+        let mut padded = Vec::new();
+        let orig_width = orig_width as usize;
+        let orig_height = orig_height as usize;
+        let final_width = final_width as usize;
+        let final_height = final_height as usize;
+
+        for y in 0..final_height {
+            for x in 0..final_width {
+                if x < orig_width && y < orig_height {
+                    // Original image data
+                    padded.push(data[y * orig_width + x]);
+                } else {
+                    // Black padding (index 0)
+                    padded.push(0);
+                }
+            }
+        }
+
+        padded
     }
 
     /// Create an 8-bit BMP file
