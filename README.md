@@ -4,7 +4,7 @@
 
 ![Banner](./assets/github-banner.png)
 
-**Automatically download and convert Nintendo DS cover art for Pico Launcher**
+**Automatically download and convert Nintendo DS and Game Boy Advance cover art for Pico Launcher**
 
 **🌐 Primary experience: [PicoCover Web UI on GitHub Pages](https://scaletta.github.io/PicoCover/)**
 
@@ -29,8 +29,10 @@
 ## ✨ Features
 
 - 🌐 **Web UI (Github Pages)** – **Recommended & easiest to use** – No installation required
-  - Automatic ROM scanning
+  - Automatic ROM scanning (NDS & GBA)
   - Real-time cover downloading and conversion
+  - **🧪 GBA Support (Beta)** – Game Boy Advance covers served from a curated library hosted on Cloudflare R2
+  - Optional GBA toggle – Choose whether to include GBA games in processing
   - Works with File System Access API (Chrome, Edge, Opera)
   - Alternative method for non-supported modern browsers (Firefox, Brave)
   - Uses a proxy to fetch and cache GameTDB images for faster, more reliable downloads
@@ -51,6 +53,7 @@
   - Supported (ZIP export fallback): Firefox, Brave
   - Your ROM folder accessible via File System Access API
   - Internet connection
+  - **GBA Support**: Currently in beta with ~980 covers from a curated library (hosted on Cloudflare R2). Coverage is incomplete but growing.
 - **Desktop/CLI/Build**
   - Rust 1.81+ for building from source
   - Network access to GameTDB art server
@@ -67,7 +70,7 @@
 **Requirements:**
 - **Recommended (full folder access):** Chrome 86+, Edge 86+, or Opera 72+
 - **Supported (ZIP export fallback):** Firefox, Brave
-- Your ROM folder accessible via File System Access API
+- Your ROM folder (containing .nds and/or .gba files) accessible via File System Access API
 - Internet connection
 
 This is the **fastest and easiest way** to get started!
@@ -184,6 +187,8 @@ Simply run the executable:
 
 Covers are saved to: `<selected-drive>/_pico/covers/nds/<GAMECODE>.bmp`
 
+**Note**: Desktop GUI currently only supports Nintendo DS. GBA support is available in the Web UI (beta).
+
 ### CLI Mode
 
 For scripting, automation, or advanced control:
@@ -220,6 +225,8 @@ pico_cover --cli --root /media/sdcard --threads 4
 
 ## 🔧 How It Works
 
+### Nintendo DS (NDS) Processing
+
 ```mermaid
 graph LR
     A[Scan .nds files] --> B[Read game code]
@@ -240,6 +247,16 @@ graph LR
    - Export as 8bpp paletted BMP
 5. **💾 Save** – Store to `_pico/covers/nds/<GAMECODE>.bmp`
 
+### Game Boy Advance (GBA) Processing (Web UI Only - Beta)
+
+1. **🔍 Scan** – Recursively finds all `.gba` files
+2. **📄 Extract** – Reads 4-byte game code from GBA header
+3. **🌐 Download** – Fetches from Cloudflare R2 bucket with curated covers (~980 covers currently available)
+4. **🖼️ Convert** – Same image processing pipeline as NDS
+5. **💾 Save** – Store to `_pico/covers/gba/<GAMECODE>.bmp`
+
+**Note**: GBA support is currently **beta** and only available in the Web UI. The cover library is hosted on Cloudflare R2 and contains ~980 manually curated covers. Coverage is incomplete but continuously expanding.
+
 ## 📝 Notes
 
 - ✅ Output directory is auto-created if missing
@@ -247,6 +264,7 @@ graph LR
 - ⚠️ GUI mode always overwrites; CLI respects `--overwrite` flag
 - ⚠️ Files without valid game codes are skipped
 - ⚠️ Only works on Pico Launcher filesystem
+- 🧪 **GBA Beta (Web UI only)**: ~980 covers currently available from curated R2 bucket. Coverage is incomplete and continuously expanding.
 
 ## 🙌 Credits & Shoutout
 

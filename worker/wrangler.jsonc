@@ -11,6 +11,13 @@
 		"enabled": true
 	},
 	/**
+	 * R2 Bucket Bindings
+	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/r2/
+	 */
+	"r2_buckets": [
+		{ "binding": "GBA_COVERS", "bucket_name": "picocover", "remote": false }
+	],
+	/**
 	 * KV Namespace Bindings
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#kv-namespaces
 	 */
@@ -34,8 +41,15 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
+	 * 
+	 * For local development, create a .dev.vars file with your credentials.
+	 * For production, use: npx wrangler secret put VARIABLE_NAME
 	 */
-	//	"vars": { "STATS_TOKEN": "" }
+	// "vars": {
+	// 	"STATS_TOKEN": "",
+	// 	"SCREENSCRAPER_DEVID": "",
+	// 	"SCREENSCRAPER_DEVPASS": ""
+	// }
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/

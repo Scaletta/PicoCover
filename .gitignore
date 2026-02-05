@@ -1,1 +1,4 @@
 /target
+# Cloudflare Worker secrets
+worker/.dev.vars
+.dev.vars

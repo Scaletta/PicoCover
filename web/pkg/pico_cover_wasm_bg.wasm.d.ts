@@ -1,8 +1,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const download_cover: (a: number, b: number) => any;
+export const download_cover: (a: number, b: number, c: number, d: number) => any;
 export const extract_game_code: (a: number, b: number) => [number, number, number, number];
+export const extract_gba_game_code: (a: number, b: number) => [number, number, number, number];
+export const extract_nds_game_code: (a: number, b: number) => [number, number, number, number];
 export const init: () => void;
 export const process_cover_image: (a: number, b: number, c: number, d: number) => [number, number, number, number];
 export const wasm_bindgen__closure__destroy__h6b42acf6049c0920: (a: number, b: number) => void;

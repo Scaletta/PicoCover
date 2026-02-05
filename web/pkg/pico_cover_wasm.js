@@ -3,17 +3,21 @@
 /**
  * Download cover from PicoCover proxy
  * @param {string} game_code
+ * @param {string} platform
  * @returns {Promise<Uint8Array>}
  */
-export function download_cover(game_code) {
+export function download_cover(game_code, platform) {
     const ptr0 = passStringToWasm0(game_code, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.download_cover(ptr0, len0);
+    const ptr1 = passStringToWasm0(platform, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.download_cover(ptr0, len0, ptr1, len1);
     return ret;
 }
 
 /**
- * Extract game code from NDS file header (reads bytes 0x0C-0x10)
+ * Extract game code from either NDS or GBA file (auto-detects based on file extension)
+ * This is kept for backwards compatibility with existing code
  * @param {Uint8Array} file_bytes
  * @returns {string}
  */
@@ -24,6 +28,58 @@ export function extract_game_code(file_bytes) {
         const ptr0 = passArray8ToWasm0(file_bytes, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.extract_game_code(ptr0, len0);
+        var ptr2 = ret[0];
+        var len2 = ret[1];
+        if (ret[3]) {
+            ptr2 = 0; len2 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
+ * Extract game code from GBA file header (reads bytes 0xAC-0xB0)
+ * @param {Uint8Array} file_bytes
+ * @returns {string}
+ */
+export function extract_gba_game_code(file_bytes) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passArray8ToWasm0(file_bytes, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.extract_gba_game_code(ptr0, len0);
+        var ptr2 = ret[0];
+        var len2 = ret[1];
+        if (ret[3]) {
+            ptr2 = 0; len2 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
+ * Extract game code from NDS file header (reads bytes 0x0C-0x10)
+ * @param {Uint8Array} file_bytes
+ * @returns {string}
+ */
+export function extract_nds_game_code(file_bytes) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passArray8ToWasm0(file_bytes, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.extract_nds_game_code(ptr0, len0);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {
@@ -140,8 +196,22 @@ function __wbg_get_imports() {
             const ret = result;
             return ret;
         },
+        __wbg_instanceof_Window_ed49b2db8df90359: function(arg0) {
+            let result;
+            try {
+                result = arg0 instanceof Window;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
         __wbg_length_32ed9a279acd054c: function(arg0) {
             const ret = arg0.length;
+            return ret;
+        },
+        __wbg_location_df7ca06c93e51763: function(arg0) {
+            const ret = arg0.location;
             return ret;
         },
         __wbg_log_6b5ca2e6124b2808: function(arg0) {
@@ -213,6 +283,13 @@ function __wbg_get_imports() {
             const ret = arg0.ok;
             return ret;
         },
+        __wbg_origin_a9c891fa602b4d40: function() { return handleError(function (arg0, arg1) {
+            const ret = arg1.origin;
+            const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len1 = WASM_VECTOR_LEN;
+            getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+        }, arguments); },
         __wbg_prototypesetcall_bdcdcc5842e4d77d: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
         },

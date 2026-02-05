@@ -10,7 +10,7 @@ pub fn init() {
 
 /// Extract game code from NDS file header (reads bytes 0x0C-0x10)
 #[wasm_bindgen]
-pub fn extract_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsValue> {
+pub fn extract_nds_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsValue> {
     if file_bytes.len() < 16 {
         return Err(JsValue::from_str("File too small"));
     }
@@ -21,6 +21,26 @@ pub fn extract_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsVal
     GameCode::from_nds_header(&header)
         .map(|code| code.to_string())
         .map_err(|e| JsValue::from_str(&format!("Invalid game code: {}", e)))
+}
+
+/// Extract game code from GBA file header (reads bytes 0xAC-0xB0)
+#[wasm_bindgen]
+pub fn extract_gba_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsValue> {
+    if file_bytes.len() < 0xB0 {
+        return Err(JsValue::from_str("File too small"));
+    }
+
+    GameCode::from_gba_header(file_bytes)
+        .map(|code| code.to_string())
+        .map_err(|e| JsValue::from_str(&format!("Invalid game code: {}", e)))
+}
+
+/// Extract game code from either NDS or GBA file (auto-detects based on file extension)
+/// This is kept for backwards compatibility with existing code
+#[wasm_bindgen]
+pub fn extract_game_code(file_bytes: &[u8]) -> std::result::Result<String, JsValue> {
+    // Default to NDS for backwards compatibility
+    extract_nds_game_code(file_bytes)
 }
 
 /// Process cover image: resize and convert to 8bpp BMP
@@ -36,9 +56,28 @@ pub fn process_cover_image(
 
 /// Download cover from PicoCover proxy
 #[wasm_bindgen]
-pub async fn download_cover(game_code: String) -> std::result::Result<Vec<u8>, JsValue> {
-    let base_url = "https://picocover.retrosave.games/";
-    let url = format!("{}{}", base_url, game_code);
+pub async fn download_cover(game_code: String, platform: String) -> std::result::Result<Vec<u8>, JsValue> {
+    let base_url = if let Some(window) = web_sys::window() {
+        if let Ok(location) = window.location().origin() {
+            if location.contains("localhost") || location.contains("127.0.0.1") {
+                "http://localhost:8787/"
+            } else {
+                "https://picocover.retrosave.games/"
+            }
+        } else {
+            "https://picocover.retrosave.games/"
+        }
+    } else {
+        "https://picocover.retrosave.games/"
+    };
+    let platform_lower = platform.to_lowercase();
+    
+    // Validate platform
+    if !["nds", "gba"].contains(&platform_lower.as_str()) {
+        return Err(JsValue::from_str("Invalid platform. Must be 'nds' or 'gba'"));
+    }
+    
+    let url = format!("{}{}/{}", base_url, platform_lower, game_code);
 
     if let Ok(response) = gloo_net::http::Request::get(&url).send().await {
         if response.ok() {
