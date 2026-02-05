@@ -57,8 +57,15 @@ body:
       required: true
 
   - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Paste screenshots here if applicable
+      render: shell
+
+  - type: textarea
     id: logs
     attributes:
-      label: Logs / screenshots
-      description: Paste logs or screenshots here if applicable
+      label: Logs
+      description: Paste logs here if applicable
       render: shell
