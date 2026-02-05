@@ -56,7 +56,10 @@ pub fn process_cover_image(
 
 /// Download cover from PicoCover proxy
 #[wasm_bindgen]
-pub async fn download_cover(game_code: String, platform: String) -> std::result::Result<Vec<u8>, JsValue> {
+pub async fn download_cover(
+    game_code: String,
+    platform: String,
+) -> std::result::Result<Vec<u8>, JsValue> {
     let base_url = if let Some(window) = web_sys::window() {
         if let Ok(location) = window.location().origin() {
             if location.contains("localhost") || location.contains("127.0.0.1") {
@@ -71,12 +74,14 @@ pub async fn download_cover(game_code: String, platform: String) -> std::result:
         "https://picocover.retrosave.games/"
     };
     let platform_lower = platform.to_lowercase();
-    
+
     // Validate platform
     if !["nds", "gba"].contains(&platform_lower.as_str()) {
-        return Err(JsValue::from_str("Invalid platform. Must be 'nds' or 'gba'"));
+        return Err(JsValue::from_str(
+            "Invalid platform. Must be 'nds' or 'gba'",
+        ));
     }
-    
+
     let url = format!("{}{}/{}", base_url, platform_lower, game_code);
 
     if let Ok(response) = gloo_net::http::Request::get(&url).send().await {
