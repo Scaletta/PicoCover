@@ -36,9 +36,9 @@ export async function extractGameCode(fileBytes: Uint8Array): Promise<string> {
 /**
  * Download cover for a game
  */
-export async function downloadCover(gameCode: string): Promise<Uint8Array> {
+export async function downloadCover(gameCode: string, platform: 'nds' | 'gba'): Promise<Uint8Array> {
   const wasm = await initWasm()
-  return wasm.download_cover(gameCode)
+  return wasm.download_cover(gameCode, platform)
 }
 
 /**

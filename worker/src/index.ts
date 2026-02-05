@@ -1,11 +1,17 @@
 /**
  * PicoCover Proxy Worker
  *
- * Cloudflare Worker that proxies image requests for Nintendo DS game covers.
- * - Fetches covers from GameTDB API (supports EN, US, EU, JP regions)
+ * Cloudflare Worker that proxies image requests for Nintendo DS and Game Boy Advance game covers.
+ * - Fetches NDS covers from GameTDB API (supports EN, US, EU, JP regions)
+ * - Fetches GBA covers from Cloudflare R2 (supports EN, US, EU, JP regions)
  * - Provides CORS headers for browser access from any origin
  * - Caches images in KV storage for 7 days
  * - Returns X-Cache header indicating HIT/MISS
+ *
+ * Routes:
+ * - GET /nds/{gameid} - Fetch Nintendo DS cover from GameTDB API
+ * - GET /gba/{gameid} - Fetch Game Boy Advance cover from Cloudflare R2
+ * - GET /stats - Get analytics stats
  *
  * Deploy: npm run deploy
  * Dev: npm run dev (runs on http://localhost:8787/)
@@ -14,7 +20,7 @@
  */
 
 const REGIONS = ["EN", "US", "EU", "JA"];
-const CACHE_TTL = 604800; // 7 days in seconds
+const CACHE_TTL = 2628000; // 30 days in seconds
 const ANALYTICS_TTL = 2592000; // 30 days in seconds (unique user retention)
 
 const corsHeaders = {
@@ -41,21 +47,35 @@ export default {
 			return handleStats(request, env);
 		}
 
-		const gameId = url.pathname.split("/").pop()?.toUpperCase();
+		// Parse route: /nds/{gameid} or /gba/{gameid}
+		const pathParts = url.pathname.split("/").filter(p => p.length > 0);
+		const platform = pathParts[0]?.toLowerCase();
+		const gameId = pathParts[1]?.toUpperCase();
+
+		// Validate platform
+		if (!platform || !["nds", "gba"].includes(platform)) {
+			return new Response(
+				JSON.stringify({ error: "Invalid platform. Must be /nds/{gameid} or /gba/{gameid}" }),
+				{ status: 400, headers: jsonHeaders }
+			);
+		}
 
 		if (!gameId) {
 			return new Response(JSON.stringify({ error: "gameId is required" }), { status: 400, headers: jsonHeaders });
 		}
 
-		if (!gameId || gameId.length !== 4) {
+		if (gameId.length !== 4) {
 			return new Response(JSON.stringify({ error: "Invalid gameId. Must be exactly 4 characters." }), { status: 400, headers: jsonHeaders });
 		}
 
+		// Create cache key with platform prefix
+		const cacheKey = `${platform}:${gameId}`;
+
 		// Try KV cache first
 		if (env.IMAGE_CACHE) {
-			const cached = await env.IMAGE_CACHE.get(gameId, "arrayBuffer");
+			const cached = await env.IMAGE_CACHE.get(cacheKey, "arrayBuffer");
 			if (cached) {
-				console.log(`Cache hit for ${gameId}`);
+				console.log(`Cache hit for ${cacheKey}`);
 				trackDownload(request, env, ctx);
 				return new Response(cached, {
 					headers: {
@@ -68,34 +88,151 @@ export default {
 			}
 		}
 
-		// Try to fetch from GameTDB
-		for (const region of REGIONS) {
-			const target = `https://art.gametdb.com/ds/cover/${region}/${gameId}.jpg`;
-			const res = await fetch(target);
-
-			if (res.ok) {
-				const arrayBuffer = await res.arrayBuffer();
-
-				// Store in KV cache
-				if (env.IMAGE_CACHE) {
-					ctx.waitUntil(env.IMAGE_CACHE.put(gameId, arrayBuffer, { expirationTtl: CACHE_TTL }));
-				}
-
-				trackDownload(request, env, ctx);
-				return new Response(arrayBuffer, {
-					headers: {
-						"Content-Type": "image/jpeg",
-						"Cache-Control": `public, max-age=${CACHE_TTL}`,
-						"X-Cache": "MISS",
-						...corsHeaders
+		// Fetch based on platform: NDS from GameTDB, GBA from R2 bucket (with ScreenScraper fallback)
+		let result: ArrayBuffer | null = null;
+		
+		if (platform === "nds") {
+			result = await fetchCoverFromGameTdb(gameId, platform);
+		} else if (platform === "gba") {
+			// Try R2 bucket first
+			if (env.GBA_COVERS) {
+				try {
+					// Try multiple extensions since covers might be .png or .jpg
+					const extensions = ['.png', '.jpg', '.jpeg'];
+					for (const ext of extensions) {
+						// Try both with and without gba/ prefix
+						const paths = [`${gameId}${ext}`, `gba/${gameId}${ext}`];
+						for (const path of paths) {
+							const r2Object = await env.GBA_COVERS.get(path);
+							if (r2Object) {
+								console.log(`R2 hit for ${path}`);
+								const buffer = await r2Object.arrayBuffer();
+								trackDownload(request, env, ctx);
+								return new Response(buffer, {
+									headers: {
+										"Content-Type": `image/${ext === '.png' ? 'png' : 'jpeg'}`,
+										"Cache-Control": `public, max-age=${CACHE_TTL}`,
+										"X-Cache": "R2",
+										...corsHeaders
+									}
+								});
+							}
+						}
 					}
-				});
+				} catch (error) {
+					console.error(`R2 lookup failed for ${gameId}:`, error);
+				}
 			}
+			//TODO: Fall back to ScreenScraper
+			//result = await fetchCoverFromScreenScraper(gameId, platform, env);
 		}
 
-		return new Response(JSON.stringify({ error: "Cover not found for gameId", gameId }), { status: 404, headers: jsonHeaders });
+		if (result) {
+			// Store in KV cache
+			if (env.IMAGE_CACHE) {
+				ctx.waitUntil(env.IMAGE_CACHE.put(cacheKey, result, { expirationTtl: CACHE_TTL }));
+			}
+
+			trackDownload(request, env, ctx);
+			return new Response(result, {
+				headers: {
+					"Content-Type": "image/jpeg",
+					"Cache-Control": `public, max-age=${CACHE_TTL}`,
+					"X-Cache": "MISS",
+					...corsHeaders
+				}
+			});
+		}
+
+		return new Response(
+			JSON.stringify({ error: `Cover not found for ${platform.toUpperCase()} game`, gameId, platform }),
+			{ status: 404, headers: jsonHeaders }
+		);
 	},
 } satisfies ExportedHandler<Env>;
+
+/* TODO: Re-enable ScreenScraper fallback for GBA covers. If i ever receive approval to use their API again...
+
+async function fetchCoverFromScreenScraper(gameId: string, platform: string, env: Env): Promise<ArrayBuffer | null> {
+	const devid = env.SCREENSCRAPER_DEVID || "";
+	const devpassword = env.SCREENSCRAPER_DEVPASS || "";
+	const softwarename = "PicoCover";
+	
+	if (!devid || !devpassword) {
+		console.error("ScreenScraper credentials not configured");
+		return null;
+	}
+
+	// System IDs: NDS = 15, GBA = 12
+	const systemeid = platform === "nds" ? "15" : "12";
+
+	const apiUrl = new URL("https://www.screenscraper.fr/api2/jeuInfos.php");
+	apiUrl.searchParams.set("devid", devid);
+	apiUrl.searchParams.set("devpassword", devpassword);
+	apiUrl.searchParams.set("softwarename", softwarename);
+	apiUrl.searchParams.set("output", "json");
+	apiUrl.searchParams.set("romtype", "rom");
+	apiUrl.searchParams.set("systemeid", systemeid);
+	apiUrl.searchParams.set("romnom", gameId);
+
+	try {
+		const response = await fetch(apiUrl.toString());
+		
+		if (!response.ok) {
+			console.error(`ScreenScraper API error: ${response.status}`);
+			return null;
+		}
+
+		const data = await response.json() as any;
+		
+		// Check for API errors
+		if (data.response?.error) {
+			console.error(`ScreenScraper error: ${data.response.error}`);
+			return null;
+		}
+
+		// Get box-2D (front cover) media
+		const medias = data.response?.jeu?.medias;
+		if (!medias || !Array.isArray(medias)) {
+			return null;
+		}
+
+		// Find box-2D (front cover) with highest resolution
+		const boxCover = medias
+			.filter((m: any) => m.type === "box-2D")
+			.sort((a: any, b: any) => (b.resolution || 0) - (a.resolution || 0))[0];
+
+		if (!boxCover?.url) {
+			return null;
+		}
+
+		// Fetch the actual image
+		const imageResponse = await fetch(boxCover.url);
+		if (imageResponse.ok) {
+			return await imageResponse.arrayBuffer();
+		}
+	} catch (error) {
+		console.error(`ScreenScraper fetch error: ${error}`);
+	}
+
+	return null;
+} 
+	*/
+
+async function fetchCoverFromGameTdb(gameId: string, platform: string): Promise<ArrayBuffer | null> {
+	const platformPath = platform === "nds" ? "ds" : "gba";
+
+	for (const region of REGIONS) {
+		const target = `https://art.gametdb.com/${platformPath}/cover/${region}/${gameId}.jpg`;
+		const res = await fetch(target);
+
+		if (res.ok) {
+			return await res.arrayBuffer();
+		}
+	}
+
+	return null;
+}
 
 async function handleStats(request: Request, env: Env): Promise<Response> {
 	if (!env.ANALYTICS) {

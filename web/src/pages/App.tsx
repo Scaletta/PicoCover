@@ -21,6 +21,7 @@ type RomFile = {
   name: string
   path: string
   id: string
+  type: 'nds' | 'gba'
   handle?: FileSystemFileHandle
   file?: File
   key?: string
@@ -47,6 +48,7 @@ export default function App() {
   const [dimensions] = useState({ width: 128, height: 96 })
   const [logs, setLogs] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
+  const [includeGba, setIncludeGba] = useState(true)
 
   useEffect(() => {
     document.documentElement.classList.add('dark')
@@ -115,7 +117,7 @@ export default function App() {
           'The "_pico" folder was not found in this directory. ' +
           'PicoLauncher may not be installed here.\n\n' +
           'Would you like to continue anyway? ' +
-          'Covers will be saved to "_pico/covers/nds" when processing.'
+          'Covers will be saved to "_pico/covers/nds" and "_pico/covers/gba" when processing.'
         )
         if (!proceed) return
         addLog('Warning: PicoLauncher installation not detected', 'error')
@@ -150,25 +152,43 @@ export default function App() {
     const roms: RomFile[] = []
 
     for (const file of Array.from(files)) {
-      if (!file.name.toLowerCase().endsWith('.nds')) continue
+      const isNds = file.name.toLowerCase().endsWith('.nds')
+      const isGba = file.name.toLowerCase().endsWith('.gba')
+      
+      if (!isNds && !isGba) continue
+      
+      // Skip GBA files if GBA support is disabled
+      if (isGba && !includeGba) {
+        addLog(`Skipped: ${file.name} (GBA support disabled)`, 'info')
+        continue
+      }
+      
       try {
-        const headerBytes = await file.slice(0, 16).arrayBuffer()
+        const headerBytes = await file.slice(0, isGba ? 0xB0 : 16).arrayBuffer()
         const fileBytes = new Uint8Array(headerBytes)
 
         let id = ''
+        const romType = isNds ? 'nds' : 'gba'
+        
         try {
-          const result = wasm.extract_game_code(fileBytes)
+          const result = isNds 
+            ? wasm.extract_nds_game_code(fileBytes)
+            : wasm.extract_gba_game_code(fileBytes)
           id = result || ''
+          if (id) {
+            addLog(`Read ${romType.toUpperCase()}: ${file.name} (${id})`, 'info')
+          }
         } catch (wasmError) {
-          console.error(`WASM error for ${file.name}:`, wasmError)
-          addLog(`Failed to read ${file.name}: ${wasmError}`, 'error')
-          continue
+          console.warn(`Could not extract game code from ${file.name}:`, wasmError)
+          addLog(`Warning: Could not extract game code from ${file.name}, will try to process anyway`, 'info')
+          // Continue anyway - allow files without valid game codes
         }
 
         roms.push({
           name: file.name,
           path: file.name,
           id,
+          type: romType,
           file,
           key: `${file.name}-${file.size}-${file.lastModified}`
         })
@@ -189,7 +209,7 @@ export default function App() {
       }
       return merged
     })
-    addLog(`Added ${roms.length} NDS ROM files`, 'success')
+    addLog(`Added ${roms.length} ROM files (NDS + GBA)`, 'success')
   }
 
   const proceedWithSelectedFiles = () => {
@@ -208,43 +228,61 @@ export default function App() {
     }
 
     setRomFiles([])
-    addLog('Scanning for NDS ROM files...', 'info')
+    addLog('Scanning for NDS and GBA ROM files...', 'info')
 
     const roms: RomFile[] = []
 
     async function scanDir(dir: FileSystemDirectoryHandle, path = '') {
       // @ts-ignore - FileSystemDirectoryHandle async iterator
       for await (const entry of dir.values()) {
-        if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.nds')) {
-          try {
-            // Read file header and extract game code from NDS header using WASM
-            const file = await (entry as FileSystemFileHandle).getFile()
-            const headerBytes = await file.slice(0, 16).arrayBuffer()
-            const fileBytes = new Uint8Array(headerBytes)
-
-            // Call WASM and handle both success and error cases
-            let id = ''
-            if (wasm) {
-              try {
-                const result = wasm.extract_game_code(fileBytes)
-                id = result || ''
-              } catch (wasmError) {
-                console.error(`WASM error for ${entry.name}:`, wasmError)
-                addLog(`Failed to read ${entry.name}: ${wasmError}`, 'error')
-                continue
-              }
+        if (entry.kind === 'file') {
+          const isNds = entry.name.toLowerCase().endsWith('.nds')
+          const isGba = entry.name.toLowerCase().endsWith('.gba')
+          
+          if (isNds || isGba) {
+            // Skip GBA files if GBA support is disabled
+            if (isGba && !includeGba) {
+              addLog(`Skipped: ${entry.name} (GBA support disabled)`, 'info')
+              continue
             }
+            
+            try {
+              // Read file header and extract game code using WASM
+              const file = await (entry as FileSystemFileHandle).getFile()
+              const headerBytes = await file.slice(0, isGba ? 0xB0 : 16).arrayBuffer()
+              const fileBytes = new Uint8Array(headerBytes)
 
-            roms.push({
-              name: entry.name,
-              path: path ? `${path}/${entry.name}` : entry.name,
-              id: id,
-              handle: entry as FileSystemFileHandle,
-              key: path ? `${path}/${entry.name}` : entry.name
-            })
-          } catch (error) {
-            // Skip files that can't be read
-            addLog(`Failed to read ${entry.name}: ${error}`, 'error')
+              // Call WASM and handle both success and error cases
+              let id = ''
+              const romType = isNds ? 'nds' : 'gba'
+              if (wasm) {
+                try {
+                  const result = isNds
+                    ? wasm.extract_nds_game_code(fileBytes)
+                    : wasm.extract_gba_game_code(fileBytes)
+                  id = result || ''
+                  if (id) {
+                    addLog(`Found ${romType.toUpperCase()}: ${entry.name} (${id})`, 'info')
+                  }
+                } catch (wasmError) {
+                  console.warn(`Could not extract game code from ${entry.name}:`, wasmError)
+                  addLog(`Warning: Could not extract game code from ${entry.name}, will try to process anyway`, 'info')
+                  // Continue anyway - allow files without valid game codes
+                }
+              }
+
+              roms.push({
+                name: entry.name,
+                path: path ? `${path}/${entry.name}` : entry.name,
+                id: id,
+                type: romType,
+                handle: entry as FileSystemFileHandle,
+                key: path ? `${path}/${entry.name}` : entry.name
+              })
+            } catch (error) {
+              // Skip files that can't be read
+              addLog(`Failed to read ${entry.name}: ${error}`, 'error')
+            }
           }
         } else if (entry.kind === 'directory' && !entry.name.startsWith('.')) {
           await scanDir(entry as FileSystemDirectoryHandle, path ? `${path}/${entry.name}` : entry.name)
@@ -255,32 +293,44 @@ export default function App() {
     await scanDir(dirHandle)
     setRomFiles(roms)
     setCurrentStep('process')
-    addLog(`Found ${roms.length} NDS ROM files`, 'success')
+    addLog(`Found ${roms.length} NDS and GBA ROM files`, 'success')
   }
 
   const processAllCovers = async () => {
     if (!wasm || romFiles.length === 0) return
 
+    // Filter ROM files based on includeGba setting
+    const filesToProcess = includeGba 
+      ? romFiles 
+      : romFiles.filter(f => f.type === 'nds')
+
+    if (filesToProcess.length === 0) {
+      addLog('No files to process based on current settings', 'error')
+      return
+    }
+
     setProcessing(true)
-    setStatus({ total: romFiles.length, processed: 0, saved: 0, skipped: 0, errors: 0 })
+    setStatus({ total: filesToProcess.length, processed: 0, saved: 0, skipped: 0, errors: 0 })
     addLog('Starting batch processing...', 'info')
 
     const isFallbackMode = !rootDir
     let zip: JSZip | null = null
-    let ndsDir: FileSystemDirectoryHandle | null = null
+    let ndsDirHandle: FileSystemDirectoryHandle | null = null
+    let gbaDirHandle: FileSystemDirectoryHandle | null = null
 
     if (isFallbackMode) {
       zip = new JSZip()
       addLog('Preparing ZIP export (no folder access)', 'info')
     } else {
-      // Get or create _pico/covers/nds directory
+      // Get or create _pico/covers/nds and _pico/covers/gba directories
       let picoDir: FileSystemDirectoryHandle
       let coversDir: FileSystemDirectoryHandle
 
       try {
         picoDir = await rootDir.getDirectoryHandle('_pico', { create: true })
         coversDir = await picoDir.getDirectoryHandle('covers', { create: true })
-        ndsDir = await coversDir.getDirectoryHandle('nds', { create: true })
+        ndsDirHandle = await coversDir.getDirectoryHandle('nds', { create: true })
+        gbaDirHandle = await coversDir.getDirectoryHandle('gba', { create: true })
       } catch (error) {
         addLog(`Error creating directories: ${error}`, 'error')
         setProcessing(false)
@@ -288,14 +338,25 @@ export default function App() {
       }
     }
 
-    for (const rom of romFiles) {
-      const bmpFilename = rom.name.replace(/\.nds$/i, '.bmp')
+    for (const rom of filesToProcess) {
+      const bmpFilename = rom.id ? `${rom.id}.bmp` : rom.name.replace(/\.(nds|gba)$/i, '.bmp')
+      const targetDir = rom.type === 'nds' ? 'nds' : 'gba'
 
       try {
-        if (!isFallbackMode && ndsDir) {
-          // Check if BMP already exists
+        if (!isFallbackMode && rom.type === 'nds' && ndsDirHandle) {
+          // Check if BMP already exists for NDS
           try {
-            await ndsDir.getFileHandle(bmpFilename)
+            await ndsDirHandle.getFileHandle(bmpFilename)
+            addLog(`Skipped: ${rom.name} (already exists)`, 'info')
+            setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
+            continue
+          } catch {
+            // File doesn't exist, continue processing
+          }
+        } else if (!isFallbackMode && rom.type === 'gba' && gbaDirHandle) {
+          // Check if BMP already exists for GBA
+          try {
+            await gbaDirHandle.getFileHandle(bmpFilename)
             addLog(`Skipped: ${rom.name} (already exists)`, 'info')
             setStatus(prev => ({ ...prev, processed: prev.processed + 1, skipped: prev.skipped + 1 }))
             continue
@@ -307,8 +368,8 @@ export default function App() {
         // Download cover using WASM
         let imageData: Uint8Array | null = null
         try {
-          imageData = await wasm.download_cover(rom.id)
-          addLog(`Downloaded: ${rom.name} (${rom.id})`, 'success')
+          imageData = await wasm.download_cover(rom.id, rom.type)
+          addLog(`Downloaded: ${rom.name} (${rom.id}) [${rom.type.toUpperCase()}]`, 'success')
         } catch (error) {
           addLog(`Failed: ${rom.name} (no cover found)`, 'error')
           setStatus(prev => ({ ...prev, processed: prev.processed + 1, errors: prev.errors + 1 }))
@@ -325,11 +386,19 @@ export default function App() {
         const bmpData = wasm.process_cover_image(imageData, dimensions.width, dimensions.height)
 
         if (isFallbackMode && zip) {
-          zip.file(`_pico/covers/nds/${bmpFilename}`, new Uint8Array(bmpData))
-          addLog(`Added to ZIP: ${bmpFilename}`, 'success')
-        } else if (!isFallbackMode && ndsDir) {
-          // Save BMP file
-          const fileHandle = await ndsDir.getFileHandle(bmpFilename, { create: true })
+          zip.file(`_pico/covers/${targetDir}/${bmpFilename}`, new Uint8Array(bmpData))
+          addLog(`Added to ZIP: ${targetDir}/${bmpFilename}`, 'success')
+        } else if (!isFallbackMode && rom.type === 'nds' && ndsDirHandle) {
+          // Save BMP file for NDS
+          const fileHandle = await ndsDirHandle.getFileHandle(bmpFilename, { create: true })
+          const writable = await fileHandle.createWritable()
+          await writable.write(new Uint8Array(bmpData))
+          await writable.close()
+
+          addLog(`Saved: ${bmpFilename}`, 'success')
+        } else if (!isFallbackMode && rom.type === 'gba' && gbaDirHandle) {
+          // Save BMP file for GBA
+          const fileHandle = await gbaDirHandle.getFileHandle(bmpFilename, { create: true })
           const writable = await fileHandle.createWritable()
           await writable.write(new Uint8Array(bmpData))
           await writable.close()
@@ -414,7 +483,7 @@ export default function App() {
         {/* Header */}
         <div className="text-center mb-8">
           <img src={logo} width={500} alt="PicoCover Logo" className="mx-auto mb-1" />
-          <p className="text-gray-600 dark:text-gray-300 text-lg">Nintendo DS Cover Art Downloader</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">NDS & GBA Cover Art Downloader</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">for Pico Launcher</p>
         </div>
 
@@ -426,7 +495,10 @@ export default function App() {
             {currentStep === 'welcome' && (
               <WelcomeStep
                 isSupported={isSupported}
-                onStart={() => setCurrentStep('select')}
+                onStart={(gbaEnabled) => {
+                  setIncludeGba(gbaEnabled ?? true)
+                  setCurrentStep('select')
+                }}
               />
             )}
 
@@ -437,8 +509,14 @@ export default function App() {
                 onSelectFiles={selectRomFiles}
                 onContinue={proceedWithSelectedFiles}
                 onRemoveFile={removeSelectedFile}
-                selectedCount={romFiles.length}
-                selectedFiles={romFiles
+                onBack={() => {
+                  setCurrentStep('welcome')
+                  setRomFiles([])
+                  setRootDir(null)
+                }}
+                includeGba={includeGba}
+                selectedCount={(includeGba ? romFiles : romFiles.filter(f => f.type === 'nds')).length}
+                selectedFiles={(includeGba ? romFiles : romFiles.filter(f => f.type === 'nds'))
                   .filter(file => !!file.key)
                   .map(file => ({
                     key: file.key as string,

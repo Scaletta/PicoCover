@@ -1,6 +1,6 @@
 {
 	"name": "picocover_worker",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
@@ -13,6 +13,6 @@
 		"@cloudflare/vitest-pool-workers": "^0.12.4",
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
-		"wrangler": "^4.61.1"
+		"wrangler": "^4.62.0"
 	}
 }

@@ -4,12 +4,23 @@
 /**
  * Download cover from PicoCover proxy
  */
-export function download_cover(game_code: string): Promise<Uint8Array>;
+export function download_cover(game_code: string, platform: string): Promise<Uint8Array>;
+
+/**
+ * Extract game code from either NDS or GBA file (auto-detects based on file extension)
+ * This is kept for backwards compatibility with existing code
+ */
+export function extract_game_code(file_bytes: Uint8Array): string;
+
+/**
+ * Extract game code from GBA file header (reads bytes 0xAC-0xB0)
+ */
+export function extract_gba_game_code(file_bytes: Uint8Array): string;
 
 /**
  * Extract game code from NDS file header (reads bytes 0x0C-0x10)
  */
-export function extract_game_code(file_bytes: Uint8Array): string;
+export function extract_nds_game_code(file_bytes: Uint8Array): string;
 
 export function init(): void;
 
@@ -22,8 +33,10 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly download_cover: (a: number, b: number) => any;
+    readonly download_cover: (a: number, b: number, c: number, d: number) => any;
     readonly extract_game_code: (a: number, b: number) => [number, number, number, number];
+    readonly extract_gba_game_code: (a: number, b: number) => [number, number, number, number];
+    readonly extract_nds_game_code: (a: number, b: number) => [number, number, number, number];
     readonly init: () => void;
     readonly process_cover_image: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly wasm_bindgen__closure__destroy__h6b42acf6049c0920: (a: number, b: number) => void;
