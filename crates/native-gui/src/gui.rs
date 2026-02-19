@@ -559,6 +559,12 @@ impl UiConfig {
                 "US".to_string(),
                 "JA".to_string(),
                 "EU".to_string(),
+                "FR".to_string(),
+                "DE".to_string(),
+                "IT".to_string(),
+                "ES".to_string(),
+                "NL".to_string(),
+                "PT".to_string(),
             ],
             url_templates: vec![
                 "https://art.gametdb.com/ds/cover/{region}/{id}.png".to_string(),

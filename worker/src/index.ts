@@ -19,7 +19,7 @@
  * @author Scaletta
  */
 
-const REGIONS = ["EN", "US", "EU", "JA"];
+const REGIONS = ["EN", "US", "EU", "JA", "FR", "DE", "IT", "ES", "NL", "PT"]; // Supported regions for GameTDB covers
 const CACHE_TTL = 2628000; // 30 days in seconds
 const ANALYTICS_TTL = 2592000; // 30 days in seconds (unique user retention)
 

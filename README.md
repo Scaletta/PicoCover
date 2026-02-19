@@ -42,7 +42,7 @@
 - ⌨️ **CLI Mode** – Full scriptable control for automation
 - 🔄 **Auto-update** – Built-in update checker with one-click updates
 - ♻️ **Auto-refresh** – Detects new drives without restarting
-- 🌍 **Multi-region support** – Tries EN, US, JA, EU until a cover is found
+- 🌍 **Multi-region support** – Tries EN, US, JA, EU, FR, DE, IT, ES, NL, PT until a cover is found
 - 🚀 **Fast processing** – Parallel downloads with CPU-core adaptive threading
 - 📦 **Native packages** – DMG for macOS, DEB for Linux, EXE for Windows
 
@@ -195,7 +195,7 @@ For scripting, automation, or advanced control:
 
 ```bash
 pico_cover --cli --root /path/to/roms \
-  --regions EN,US,JA,EU \
+  --regions EN,US,JA,EU,FR,DE,NL,IT,ES,PT \
   --overwrite \
   --timeout-secs 15
 ```

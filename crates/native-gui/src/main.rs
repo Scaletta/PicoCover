@@ -21,7 +21,7 @@ struct Args {
     root: PathBuf,
 
     /// Region codes to try (order matters).
-    #[arg(long, value_delimiter = ',', default_value = "EN,US,JA,EU")]
+    #[arg(long, value_delimiter = ',', default_value = "EN,US,JA,EU,FR,DE,IT,ES,NL,PT")]
     regions: Vec<String>,
 
     /// Output subdirectory relative to root.
