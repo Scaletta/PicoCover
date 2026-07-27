@@ -15,8 +15,8 @@ pub fn check_for_updates() -> Result<Option<String>> {
         .build()?
         .fetch()?;
 
-    if let Some(latest_release) = releases.first() {
-        let latest_version = latest_release.version.trim_start_matches('v');
+    if let Some(latest_release) = releases.latest() {
+        let latest_version = latest_release.version();
         if latest_version != current_version {
             return Ok(Some(latest_version.to_string()));
         }
@@ -50,10 +50,10 @@ pub fn perform_update() -> Result<()> {
         .build()?
         .update()?;
     match status {
-        self_update::Status::UpToDate(version) => {
+        self_update::VersionStatus::UpToDate(version) => {
             println!("PicoCover is already up to date (v{})", version);
         }
-        self_update::Status::Updated(version) => {
+        self_update::VersionStatus::Updated(version) => {
             println!("Successfully updated PicoCover to v{}", version);
             println!("Restarting PicoCover...");
 
@@ -103,6 +103,7 @@ pub fn perform_update() -> Result<()> {
                 std::process::exit(0);
             }
         }
+        _ => {}
     }
 
     Ok(())
