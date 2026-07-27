@@ -1,6 +1,6 @@
 [package]
 name = "pico-cover-wasm"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Scaletta"]
 license = "CC-BY-NC-4.0"
