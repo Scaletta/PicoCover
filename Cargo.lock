@@ -3244,7 +3244,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pico-cover"
-version = "1.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3269,7 +3269,7 @@ dependencies = [
 
 [[package]]
 name = "pico-cover-core"
-version = "1.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "color_quant 2.0.0",
@@ -3282,7 +3282,7 @@ dependencies = [
 
 [[package]]
 name = "pico-cover-wasm"
-version = "1.1.1"
+version = "0.1.2"
 dependencies = [
  "console_error_panic_hook",
  "gloo-net",
